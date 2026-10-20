@@ -79,7 +79,6 @@ public sealed class CreateLoanCommandHandler(
         }
         catch (IdempotencyKeyConflictException)
         {
-            // CreateAsync já encerrou sua transação antes deste catch.
             unitOfWork.ClearTracking();
 
             var confirmedLoan =
