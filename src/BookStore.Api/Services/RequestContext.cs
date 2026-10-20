@@ -16,10 +16,8 @@ public sealed class RequestContext(IHttpContextAccessor accessor) : IRequestCont
         {
             var values = HttpContext.Request.Headers["X-User-Id"];
             if (values.Count != 1 || !Guid.TryParse(values[0], out var actorId) || actorId == Guid.Empty)
-            {
                 throw new BadRequestException(
                     "Informe um X-User-Id válido.");
-            }
 
             return actorId;
         }

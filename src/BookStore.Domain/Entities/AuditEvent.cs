@@ -2,7 +2,9 @@
 
 public sealed class AuditEvent : BaseEntity
 {
-    private AuditEvent() { }
+    private AuditEvent()
+    {
+    }
 
     public string EntityName { get; private set; } = string.Empty;
     public Guid EntityId { get; private set; }
@@ -22,12 +24,12 @@ public sealed class AuditEvent : BaseEntity
         ArgumentException.ThrowIfNullOrWhiteSpace(entityName);
         ArgumentException.ThrowIfNullOrWhiteSpace(action);
         ArgumentException.ThrowIfNullOrWhiteSpace(correlationId);
-        if(entityId == Guid.Empty)
+        if (entityId == Guid.Empty)
             throw new ArgumentException("EntityId inválido.", nameof(entityId));
-        
-        if(entityId == Guid.Empty)
+
+        if (actorId == Guid.Empty)
             throw new ArgumentException("ActorId inválido.", nameof(actorId));
-        
+
         return new AuditEvent
         {
             EntityName = entityName,

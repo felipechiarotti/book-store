@@ -9,7 +9,12 @@ public class BaseRepository<TEntity>(AppDbContext dbContext) : IBaseRepository<T
 {
     protected readonly AppDbContext DbContext = dbContext;
     protected readonly DbSet<TEntity> DbSet = dbContext.Set<TEntity>();
-    
+
+    public void Add(IEnumerable<TEntity> entities)
+    {
+        DbSet.AddRange(entities);
+    }
+
     public void Add(TEntity entity)
     {
         DbSet.Add(entity);

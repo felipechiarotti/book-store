@@ -4,18 +4,20 @@ namespace BookStore.Domain.Entities;
 
 public class BookCopy : BaseEntity
 {
-    private BookCopy() { }
-    
+    private BookCopy()
+    {
+    }
+
     public Guid BookId { get; private set; }
-    public string InventoryCode {get; private set;} = string.Empty;
+    public string InventoryCode { get; private set; } = string.Empty;
     public BookCopyStatus Status { get; private set; } = BookCopyStatus.AvailableForCirculation;
-    
+
     public static BookCopy Create(Guid bookId, string inventoryCode)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(inventoryCode);
-        if(bookId == Guid.Empty)
+        if (bookId == Guid.Empty)
             throw new ArgumentException("BookId inválido.", nameof(bookId));
-        
+
         return new BookCopy
         {
             BookId = bookId,
@@ -23,6 +25,8 @@ public class BookCopy : BaseEntity
         };
     }
 
-    public void Withdraw() =>
+    public void Withdraw()
+    {
         Status = BookCopyStatus.Withdrawn;
+    }
 }

@@ -2,7 +2,6 @@
 
 public class NotFoundException(string message) : Exception(message);
 
-public class ConflictException(string message) : Exception(message);
+public class ConflictException(string message, Exception? innerException = null) : Exception(message, innerException);
 
 public class BadRequestException(string message) : Exception(message);
-

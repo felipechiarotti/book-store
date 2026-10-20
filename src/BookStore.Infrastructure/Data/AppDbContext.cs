@@ -1,6 +1,4 @@
-﻿
-
-using BookStore.Domain.Entities;
+﻿using BookStore.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookStore.Infrastructure.Data;
@@ -24,7 +22,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TimeProvider t
 
     private void HandleBaseEntity()
     {
-
         var entries = ChangeTracker
             .Entries<BaseEntity>()
             .Where(e => e.State is EntityState.Added or EntityState.Modified)

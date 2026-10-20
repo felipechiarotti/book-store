@@ -57,7 +57,7 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
         httpContext.Response.StatusCode = problemDetails.Status!.Value;
         problemDetails.Extensions["correlationId"] =
             httpContext.TraceIdentifier;
-        
+
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
 
         return true;

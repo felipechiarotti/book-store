@@ -1,9 +1,13 @@
-﻿namespace BookStore.Domain.Entities;
+﻿using BookStore.Domain.Rules;
+
+namespace BookStore.Domain.Entities;
 
 public class Book : BaseEntity
 {
-    private Book() { }
-    
+    private Book()
+    {
+    }
+
     public string Title { get; private set; } = string.Empty;
     public string Isbn { get; private set; } = string.Empty;
     public string Author { get; private set; } = string.Empty;
@@ -14,12 +18,12 @@ public class Book : BaseEntity
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
         ArgumentException.ThrowIfNullOrWhiteSpace(author);
         ArgumentException.ThrowIfNullOrWhiteSpace(isbn);
-        
+
         return new Book
         {
-            Title = title,
-            Isbn = isbn,
-            Author = author
+            Title = title.Trim(),
+            Isbn = IsbnRules.Normalize(isbn),
+            Author = author.Trim()
         };
     }
 
@@ -27,8 +31,8 @@ public class Book : BaseEntity
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
         ArgumentException.ThrowIfNullOrWhiteSpace(author);
-        Title = title;
-        Author = author;
+        Title = title.Trim();
+        Author = author.Trim();
     }
 
     public void Deactivate()

@@ -23,10 +23,8 @@ public sealed class CorrelationIdMiddleware(
             if (string.IsNullOrWhiteSpace(value) ||
                 value.Length > 128 ||
                 value.Any(char.IsControl))
-            {
                 throw new BadRequestException(
                     "Informe um X-Correlation-Id válido, com até 128 caracteres.");
-            }
 
             context.TraceIdentifier = value;
         }
