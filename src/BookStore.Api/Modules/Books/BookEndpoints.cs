@@ -38,6 +38,17 @@ public static class BookEndpoints
             .Produces<ProblemDetails>(StatusCodes.Status409Conflict)
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 
+        group.MapDelete("/{id:guid}", DeactivateAsync)
+            .AddEndpointFilter<RequireActorFilter>()
+            .WithName("DeactivateBook")
+            .WithSummary("Desativa um livro, preservando os empréstimos e o histórico.")
+            .WithDescription(
+                "Exige X-User-Id. Impede novos empréstimos, sem encerrar os existentes. " +
+                "Repetir a desativação retorna 204 sem novo evento de auditoria.")
+            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+
         group.MapGet("/{id:guid}", GetByIdAsync)
             .WithName("GetBookById")
             .WithSummary("Consulta um livro pelo identificador.")
@@ -81,6 +92,16 @@ public static class BookEndpoints
         await sender.Send(
             new UpdateBookCommand(id, request.Title, request.Author, request.Quantity),
             cancellationToken);
+
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<NoContent> DeactivateAsync(
+        Guid id,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        await sender.Send(new DeactivateBookCommand(id), cancellationToken);
 
         return TypedResults.NoContent();
     }

@@ -19,6 +19,8 @@ A consulta GET /books/{id}/availability está no código e retorna quantity, act
 
 ## Documentação
 
+`DELETE /books/{id}` desativa o título com X-User-Id obrigatório e retorna204. Preserva quantidade, empréstimos e histórico; grava a transição e auditoria na mesma transação sob lock do livro. Repetir não gera outro evento. Novos empréstimos são rejeitados para inativos; devolução/cancelamento dos existentes continuam permitidos. Ver [contrato de desativação](docs/project/books.md#desativação--contrato-e-razão). Sem nova configuração ou migration; testes HTTP/PostgreSQL permanecem pendentes.
+
 O código de `PATCH /books/{id}` atualiza título, autor e quantidade, com X-User-Id obrigatório. Campos ausentes são preservados; null explícito e corpo sem campos editáveis são rejeitados400. Quantidade abaixo dos empréstimos ativos gera409. Lock do livro protege a alteração; Book e auditoria Before/After são gravados atomicamente. Repetir valores iguais retorna204 sem novo evento. Ver [contrato, decisões e limites](docs/project/books.md). HTTP e concorrência real permanecem pendentes para a etapa final.
 
 | Leitor                       | Entrada                                        | Conteúdo                                                                |
