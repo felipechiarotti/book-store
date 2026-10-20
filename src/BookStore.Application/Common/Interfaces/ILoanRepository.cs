@@ -22,4 +22,10 @@ public interface ILoanRepository : IBaseRepository<Loan>
     Task<int> CountActiveByBookIdAsync(
         Guid bookId,
         CancellationToken cancellationToken);
+
+    Task<PagedResult<LoanResponse>> GetHistoryByUserIdAsync(
+        Guid userId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken);
 }

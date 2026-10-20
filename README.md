@@ -19,6 +19,8 @@ A consulta GET /books/{id}/availability está no código e retorna quantity, act
 
 ## Documentação
 
+`GET /users/{id}/loans` consulta empréstimos do usuário em todos os estados, inclusive de livros desativados, com o mesmo formato paginado e status textual do histórico por livro. Usuário inexistente404; sem empréstimos200 vazio; sem X-User-Id. Paginação1/20, máximo100, ordem LoanedAt/Id desc. [Contrato e decisões](docs/project/loan-history.md#histórico-por-usuário). Sem nova configuração/migration; HTTP e PostgreSQL permanecem pendentes.
+
 `GET /books/{id}/history` consulta empréstimos ativos, devolvidos e cancelados do livro, inclusive desativado, com paginação e TotalCount. Ordena por LoanedAt/Id decrescentes e retorna status textual; não exige X-User-Id. Livro inexistente404, histórico vazio200. [Contrato e trade-offs](docs/project/loan-history.md). Sem nova configuração/migration; validação HTTP/PostgreSQL ainda pendente.
 
 `DELETE /books/{id}` desativa o título com X-User-Id obrigatório e retorna204. Preserva quantidade, empréstimos e histórico; grava a transição e auditoria na mesma transação sob lock do livro. Repetir não gera outro evento. Novos empréstimos são rejeitados para inativos; devolução/cancelamento dos existentes continuam permitidos. Ver [contrato de desativação](docs/project/books.md#desativação--contrato-e-razão). Sem nova configuração ou migration; testes HTTP/PostgreSQL permanecem pendentes.

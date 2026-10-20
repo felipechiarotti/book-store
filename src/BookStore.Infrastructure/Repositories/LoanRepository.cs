@@ -57,13 +57,34 @@ public sealed class LoanRepository(AppDbContext context)
                     && loan.Status == LoanStatus.Active,
             cancellationToken);
 
-    public async Task<PagedResult<LoanResponse>> GetHistoryByBookIdAsync(
+    public Task<PagedResult<LoanResponse>> GetHistoryByBookIdAsync(
         Guid bookId,
         int page,
         int pageSize,
         CancellationToken cancellationToken)
+        => GetHistoryPageAsync(
+            DbSet.Where(loan => loan.BookId == bookId),
+            page,
+            pageSize,
+            cancellationToken);
+
+    public Task<PagedResult<LoanResponse>> GetHistoryByUserIdAsync(
+        Guid userId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+        => GetHistoryPageAsync(
+            DbSet.Where(loan => loan.UserId == userId),
+            page,
+            pageSize,
+            cancellationToken);
+
+    private static async Task<PagedResult<LoanResponse>> GetHistoryPageAsync(
+        IQueryable<Loan> query,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
     {
-        var query = DbSet.AsNoTracking().Where(loan => loan.BookId == bookId);
         var totalCount = await query.CountAsync(cancellationToken);
         var offset = ((long)page - 1) * pageSize;
 
@@ -71,6 +92,7 @@ public sealed class LoanRepository(AppDbContext context)
             return new PagedResult<LoanResponse>([], totalCount);
 
         var items = await query
+            .AsNoTracking()
             .OrderByDescending(loan => loan.LoanedAt)
             .ThenByDescending(loan => loan.Id)
             .Skip((int)offset)
