@@ -40,6 +40,12 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
                 Title = "Conflito",
                 Detail = exception.Message
             },
+            BadHttpRequestException { StatusCode: StatusCodes.Status400BadRequest } => new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Solicitação inválida",
+                Detail = "O corpo da requisição é inválido. Confira o JSON e os tipos dos campos."
+            },
             BadRequestException => new ProblemDetails
             {
                 Status = StatusCodes.Status400BadRequest,

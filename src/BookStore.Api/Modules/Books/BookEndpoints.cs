@@ -26,6 +26,18 @@ public static class BookEndpoints
             .Produces<ProblemDetails>(StatusCodes.Status409Conflict)
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 
+        group.MapPatch("/{id:guid}", UpdateAsync)
+            .AddEndpointFilter<RequireActorFilter>()
+            .WithName("UpdateBook")
+            .WithSummary("Atualiza parcialmente título, autor e quantidade do livro.")
+            .WithDescription(
+                "Exige X-User-Id. Campos ausentes são preservados; null explícito é rejeitado. " +
+                "A quantidade não pode ficar abaixo dos empréstimos ativos. ISBN não é editável.")
+            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+            .Produces<ProblemDetails>(StatusCodes.Status409Conflict)
+            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+
         group.MapGet("/{id:guid}", GetByIdAsync)
             .WithName("GetBookById")
             .WithSummary("Consulta um livro pelo identificador.")
@@ -58,6 +70,19 @@ public static class BookEndpoints
         return TypedResults.Created(
             $"/books/{bookCreatedResponse.Id}",
             bookCreatedResponse);
+    }
+
+    private static async Task<NoContent> UpdateAsync(
+        Guid id,
+        UpdateBookRequest request,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        await sender.Send(
+            new UpdateBookCommand(id, request.Title, request.Author, request.Quantity),
+            cancellationToken);
+
+        return TypedResults.NoContent();
     }
 
     private static async Task<Ok<BookResponse>> GetByIdAsync(
