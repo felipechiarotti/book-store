@@ -31,4 +31,4 @@ Build não comprova integridade transacional, concorrência, startup ou contrato
 
 Não versionar .env, credenciais ou dados sensíveis. Usar .env.example somente com exemplos sanitizados. O .env está ignorado; revisar o índice antes de commits autorizados. O hook de proteção preparado anteriormente está ausente no último checkpoint, portanto não presumir que bloqueio adicional está ativo.
 
-Os arquivos Compose e Dockerfile fazem parte da base local. Consulte o estado atual antes de iniciar serviços ou executar migrations contra dados existentes.
+Os arquivos Compose e Dockerfile fazem parte da base local. As migrations são aplicadas manualmente antes de iniciar a API; subir a aplicação não atualiza o schema. Consulte as [instruções de migrations](docs/project/development.md#migrations-manuais) e o estado atual antes de iniciar serviços ou executar migrations contra dados existentes.

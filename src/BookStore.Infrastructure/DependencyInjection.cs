@@ -1,5 +1,6 @@
 ﻿using BookStore.Application.Common.Interfaces;
 using BookStore.Infrastructure.Data;
+using BookStore.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +15,8 @@ public static class DependencyInjection
     {
         services.AddPostgres(configuration);
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        
+        services.AddScoped<IBookRepository, BookRepository>();
         return services;
     }
     
