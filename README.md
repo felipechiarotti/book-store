@@ -8,12 +8,12 @@ Projeto em construção: fundação e cadastro de livro com quantidade e auditor
 A consulta por ID, listagem paginada e a migration de remoção de BookCopy estão presentes. A infraestrutura de usuários
 conta com entidade, mapping, repositório scoped e migration AddUsers gerada, ainda não aplicada nesta etapa.
 O código de POST /users está presente: recebe name e retorna201 com id/name normalizado, sem Location e sem exigir X-User-Id, conforme contrato aprovado.
-Demais operações do catálogo, empréstimos, cache e verificação funcional ainda não estão concluídos. O contrato de
+Demais operações do catálogo, encerramento de empréstimos, cache e verificação funcional ainda não estão concluídos. O contrato de
 respostas HTTP está aprovado; a centralização dos erros foi adiada pelo arquiteto. Consulte
 o [estado atual](docs/project/status.md) para evidências e limites.
 
 A base de empréstimos conta com Loan/LoanStatus, FKs restritivas, chave de idempotência única e migration AddLoans
-gerada sem acesso ao banco. Isso ainda não implementa criação, replay idempotente, locks ou controle de disponibilidade.
+gerada sem acesso ao banco. O código de POST /loans e GET /loans/{id} está presente, com lock de Book, contagem de ativos, auditoria e recuperação idempotente. HTTP, persistência e concorrência real ainda não foram exercitados nesta etapa.
 
 ## Documentação
 
@@ -60,6 +60,8 @@ ou executar migrations contra dados existentes.
 | POSTGRES_PASSWORD           | Senha local, fornecida externamente; nunca versionar valores reais                |
 | ASPNETCORE_ENVIRONMENT      | Ambiente da API; Development expõe OpenAPI/Scalar                                 |
 | LOG_LEVEL                   | Nível Serilog no Compose, com fallback atual Verbose                              |
+| LOAN_DURATION_DAYS | Prazo em dias no Compose; padrão7, positivo; alimenta Loans__DurationDays |
+| Loans__DurationDays | Sobrescrita direta da configuração do prazo no host; padrão7 |
 | ConnectionStrings__Postgres | Conexão usada pela API e ferramentas EF; o Compose monta a conexão para sua rede  |
 | ConnectionStrings__Redis    | Conexão Redis fornecida à API pelo Compose; uso funcional do cache ainda pendente |
 
@@ -120,9 +122,9 @@ implementados/verificados.
 | Área         | Escolha e trade-off                                                                                                                                                                                                                                                                                                                                                                                                                   |
 |--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Concorrência | Controle pessimista no PostgreSQL: Read Committed, SELECT FOR UPDATE no Book e contagem de Loans ativos após adquirir o lock. Escritas seguem Book → Loan. Capacidade é Book.Quantity; não existe índice único por Loan.BookId para Active, pois mais de um empréstimo ativo é válido até essa capacidade. Todos os escritores precisam seguir o protocolo, com custo de serialização por título. |
-| Idempotência | Idempotency-Key e hash dos parâmetros de negócio no Loan; chave global única e retenção de sucessos. Mesma chave e mesmos dados recuperam a criação original; dados diferentes produzem conflito. Dispensa uma tabela genérica, mas acopla os metadados ao empréstimo e exige recuperação específica de corridas concorrentes.                                                                                                        |
+| Idempotência | Idempotency-Key no Loan e comparação direta de BookId/UserId, sem hash; chave global única e retenção de sucessos. Mesma chave e mesmos dados recuperam a criação original; dados diferentes produzem conflito. Dispensa uma tabela genérica, mas acopla os metadados ao empréstimo e exige recuperação específica de corridas concorrentes.                                                                                                        |
 | Cache        | Redis para catálogo, sem decidir disponibilidade de empréstimo. Cache-aside com geração de namespace e TTL; invalidar após commit. Capturar a geração antes da leitura do banco. Aceita consistência eventual e fallback ao banco; TTL limita dados antigos após falha de invalidação.                                                                                                                                                |
-| Auditoria    | AuditEvent no mesmo contexto/transação da operação, com ator declarado, UTC, correlação e detalhes JSON selecionados pela Application. Não substituir por logs ou serializar entidades indiscriminadamente. O histórico exige evolução cuidadosa do formato dos detalhes.                                                                                                                                                             |
+| Auditoria    | AuditEvent com AuditAction tipado (persistido como texto) no mesmo contexto/transação da operação, com ator declarado, UTC, correlação e detalhes JSON selecionados pela Application. Não substituir por logs ou serializar entidades indiscriminadamente. O histórico exige evolução cuidadosa do formato dos detalhes.                                                                                                                                                             |
 
 Razões e alternativas estão no [desenho técnico](docs/project/design.md); transações e locks estão detalhados
 no [guia transacional](docs/project/transactions.md).
@@ -145,4 +147,3 @@ Simplificação aprovada, ainda em implementação: Book armazena Quantity e Loa
 - Testes funcionais/concorrentes, readiness/liveness completos, OpenTelemetry e Kubernetes ainda estão pendentes. Antes
   de produção, verificar esses contratos, carga real, segurança, backups/restauração, gestão de segredos e
   dimensionamento de conexões entre réplicas.
-

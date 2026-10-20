@@ -23,10 +23,6 @@ public sealed class LoanConfiguration : BaseEntityConfiguration<Loan>
             .IsRequired()
             .HasMaxLength(128);
 
-        builder.Property(loan => loan.RequestHash)
-            .IsRequired()
-            .HasMaxLength(64);
-
         builder.HasOne<Book>()
             .WithMany()
             .HasForeignKey(loan => loan.BookId)

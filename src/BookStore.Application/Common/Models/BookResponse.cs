@@ -1,4 +1,4 @@
-﻿namespace BookStore.Application.Features.Books.Models;
+namespace BookStore.Application.Common.Models;
 
 public sealed record BookResponse(
     Guid Id,

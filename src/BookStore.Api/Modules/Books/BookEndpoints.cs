@@ -1,7 +1,7 @@
-﻿using BookStore.Api.Filters;
+using BookStore.Api.Filters;
 using BookStore.Application.Common.Models;
 using BookStore.Application.Features.Books.Commands;
-using BookStore.Application.Features.Books.Models;
+
 using BookStore.Application.Features.Books.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -25,14 +25,14 @@ public static class BookEndpoints
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
             .Produces<ProblemDetails>(StatusCodes.Status409Conflict)
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
-        
+
         group.MapGet("/{id:guid}", GetByIdAsync)
             .WithName("GetBookById")
             .WithSummary("Consulta um livro pelo identificador.")
             .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
-        
+
         group.MapGet("", GetAsync)
             .WithName("GetBooks")
             .WithSummary("Lista os livros com paginação.")
@@ -51,7 +51,7 @@ public static class BookEndpoints
             $"/books/{bookCreatedResponse.Id}",
             bookCreatedResponse);
     }
-    
+
     private static async Task<Ok<BookResponse>> GetByIdAsync(
         Guid id,
         ISender sender,
@@ -63,7 +63,7 @@ public static class BookEndpoints
 
         return TypedResults.Ok(response);
     }
-    
+
     private static async Task<Ok<PageResponse<BookResponse>>> GetAsync(
         [AsParameters] GetBooksQuery query,
         ISender sender,

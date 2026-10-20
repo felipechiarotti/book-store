@@ -1,4 +1,6 @@
-﻿namespace BookStore.Domain.Entities;
+using BookStore.Domain.Enums;
+
+namespace BookStore.Domain.Entities;
 
 public sealed class AuditEvent : BaseEntity
 {
@@ -8,7 +10,7 @@ public sealed class AuditEvent : BaseEntity
 
     public string EntityName { get; private set; } = string.Empty;
     public Guid EntityId { get; private set; }
-    public string Action { get; private set; } = string.Empty;
+    public AuditAction Action { get; private set; }
     public Guid ActorId { get; private set; }
     public string CorrelationId { get; private set; } = string.Empty;
     public string Details { get; private set; } = string.Empty;
@@ -16,13 +18,12 @@ public sealed class AuditEvent : BaseEntity
     public static AuditEvent Create(
         string entityName,
         Guid entityId,
-        string action,
+        AuditAction action,
         Guid actorId,
         string correlationId,
         string details)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(entityName);
-        ArgumentException.ThrowIfNullOrWhiteSpace(action);
         ArgumentException.ThrowIfNullOrWhiteSpace(correlationId);
         if (entityId == Guid.Empty)
             throw new ArgumentException("EntityId inválido.", nameof(entityId));

@@ -1,6 +1,6 @@
-﻿using BookStore.Application.Common.Exceptions;
+using BookStore.Application.Common.Exceptions;
 using BookStore.Application.Common.Interfaces;
-using BookStore.Application.Features.Books.Models;
+using BookStore.Application.Common.Models;
 using FluentValidation;
 using MediatR;
 
@@ -31,7 +31,7 @@ public sealed class GetBookByIdQueryHandler(IBookRepository bookRepository)
                    request.Id,
                    cancellationToken)
                ?? throw new NotFoundException("Livro não encontrado.");
-        
+
         return new BookResponse(bookEntity.Id, bookEntity.Title, bookEntity.Isbn, bookEntity.Author, bookEntity.Quantity, bookEntity.IsActive);
     }
 }

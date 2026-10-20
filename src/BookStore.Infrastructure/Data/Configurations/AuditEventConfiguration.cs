@@ -17,6 +17,7 @@ public sealed class AuditEventConfiguration
             .HasMaxLength(100);
 
         builder.Property(audit => audit.Action)
+            .HasConversion<string>()
             .IsRequired()
             .HasMaxLength(100);
 

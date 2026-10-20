@@ -1,4 +1,4 @@
-﻿namespace BookStore.Application.Features.Books.Models;
+namespace BookStore.Application.Common.Models.Auditing;
 
 internal sealed record BookCreatedAuditDetails(
     string Title,

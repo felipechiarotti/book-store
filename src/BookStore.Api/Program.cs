@@ -1,10 +1,12 @@
 using BookStore.Api.Extensions;
 using BookStore.Api.Middlewares;
 using BookStore.Api.Modules.Books;
+using BookStore.Api.Modules.Loans;
 using BookStore.Api.Modules.Users;
 using BookStore.Api.Services;
 using BookStore.Application;
 using BookStore.Application.Common.Interfaces;
+using BookStore.Application.Common.Options;
 using BookStore.Infrastructure;
 using Scalar.AspNetCore;
 
@@ -16,6 +18,10 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 builder.Services.AddApplicationServices();
+builder.Services.AddOptions<LoanOptions>()
+    .Bind(builder.Configuration.GetSection(LoanOptions.SectionName))
+    .Validate(options => options.DurationDays > 0, "O prazo de empréstimo deve ser maior que zero.")
+    .ValidateOnStart();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddStructuredLogging(builder.Configuration);
 
@@ -47,4 +53,5 @@ await app.ApplyDatabaseMigrationsAsync();
 app.MapHealthChecks("/health");
 app.MapBookEndpoints();
 app.MapUserEndpoints();
+app.MapLoanEndpoints();
 app.Run();

@@ -1,6 +1,6 @@
-﻿using BookStore.Application.Common.Interfaces;
+using BookStore.Application.Common.Interfaces;
 using BookStore.Application.Common.Models;
-using BookStore.Application.Features.Books.Models;
+
 using FluentValidation;
 using MediatR;
 
@@ -40,7 +40,7 @@ public sealed class GetBooksQueryHandler(IBookRepository bookRepository)
 
         if (totalCount == 0)
             return new PageResponse<BookResponse>([], request.Page, request.PageSize, totalCount);
-        
+
         var items = books
             .Select(book => new BookResponse(
                 book.Id,

@@ -1,8 +1,9 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using BookStore.Application.Common.Exceptions;
 using BookStore.Application.Common.Interfaces;
-using BookStore.Application.Features.Books.Models;
+using BookStore.Application.Common.Models.Auditing;
 using BookStore.Domain.Entities;
+using BookStore.Domain.Enums;
 using BookStore.Domain.Rules;
 using FluentValidation;
 using MediatR;
@@ -75,7 +76,7 @@ public sealed class CreateBookCommandHandler(
         var auditEvent = AuditEvent.Create(
             nameof(Book),
             book.Id,
-            "Created",
+            AuditAction.Created,
             actorId,
             correlationId,
             JsonSerializer.Serialize(details));

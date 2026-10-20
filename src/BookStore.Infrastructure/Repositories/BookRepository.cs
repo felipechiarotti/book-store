@@ -11,7 +11,7 @@ public class BookRepository(AppDbContext dbContext) : BaseRepository<Book>(dbCon
     {
         return await DbSet.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
-    
+
     public async Task<Book?> GetByIdNotTrackedAsync(
         Guid id,
         CancellationToken cancellationToken)
@@ -41,7 +41,26 @@ public class BookRepository(AppDbContext dbContext) : BaseRepository<Book>(dbCon
             .Skip((int)offset)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
-        
+
         return (totalCount, items);
+    }
+
+    public Task<Book?> GetByIdWithLockAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        if (DbContext.Database.CurrentTransaction is null)
+            throw new InvalidOperationException(
+                "A consulta com bloqueio exige uma transação ativa.");
+
+        return DbSet
+            .FromSql($"""
+                      SELECT *
+                      FROM books
+                      WHERE "Id" = {id}
+                      FOR UPDATE
+                      """)
+            .AsTracking()
+            .SingleOrDefaultAsync(cancellationToken);
     }
 }

@@ -15,15 +15,13 @@ public sealed class Loan : BaseEntity
     public DateTimeOffset? ClosedAt { get; private set; }
     public LoanStatus Status { get; private set; } = LoanStatus.Active;
     public string IdempotencyKey { get; private set; } = string.Empty;
-    public string RequestHash { get; private set; } = string.Empty;
 
     public static Loan Create(
         Guid bookId,
         Guid userId,
         DateTimeOffset loanedAt,
         DateTimeOffset dueAt,
-        string idempotencyKey,
-        string requestHash)
+        string idempotencyKey)
     {
         if (dueAt <= loanedAt)
             throw new ArgumentOutOfRangeException(
@@ -36,8 +34,7 @@ public sealed class Loan : BaseEntity
             UserId = userId,
             LoanedAt = loanedAt.ToUniversalTime(),
             DueAt = dueAt.ToUniversalTime(),
-            IdempotencyKey = idempotencyKey,
-            RequestHash = requestHash
+            IdempotencyKey = idempotencyKey
         };
     }
 }

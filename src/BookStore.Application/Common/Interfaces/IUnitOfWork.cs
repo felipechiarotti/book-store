@@ -2,6 +2,8 @@
 
 public interface IUnitOfWork
 {
+    void ClearTracking();
+
     Task<int> SaveChangesAsync(
         CancellationToken cancellationToken);
 
