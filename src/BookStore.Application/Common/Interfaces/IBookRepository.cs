@@ -1,9 +1,14 @@
+using BookStore.Application.Common.Models;
 using BookStore.Domain.Entities;
 
 namespace BookStore.Application.Common.Interfaces;
 
 public interface IBookRepository : IBaseRepository<Book>
 {
+    Task<BookAvailability?> GetAvailabilityAsync(
+        Guid id,
+        CancellationToken cancellationToken);
+
     Task<Book?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<Book?> GetByIdNotTrackedAsync(Guid id, CancellationToken cancellationToken);
     Task<bool> ExistsByIsbnAsync(string isbn, CancellationToken cancellationToken);
@@ -11,7 +16,7 @@ public interface IBookRepository : IBaseRepository<Book>
     Task<Book?> GetByIdWithLockAsync(
         Guid id,
         CancellationToken cancellationToken);
-    Task<(int TotalCount, IReadOnlyList<Book> Items)> GetPaginatedAsync(
+    Task<PagedResult<Book>> GetPaginatedAsync(
         int page,
         int pageSize,
         CancellationToken cancellationToken);

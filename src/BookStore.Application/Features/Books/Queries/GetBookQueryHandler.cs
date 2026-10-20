@@ -33,15 +33,15 @@ public sealed class GetBooksQueryHandler(IBookRepository bookRepository)
         GetBooksQuery request,
         CancellationToken cancellationToken)
     {
-        var (totalCount, books) = await bookRepository.GetPaginatedAsync(
+        var booksPage = await bookRepository.GetPaginatedAsync(
             request.Page,
             request.PageSize,
             cancellationToken);
 
-        if (totalCount == 0)
-            return new PageResponse<BookResponse>([], request.Page, request.PageSize, totalCount);
+        if (booksPage.TotalCount == 0)
+            return new PageResponse<BookResponse>([], request.Page, request.PageSize, booksPage.TotalCount);
 
-        var items = books
+        var items = booksPage.Items
             .Select(book => new BookResponse(
                 book.Id,
                 book.Title,
@@ -55,6 +55,6 @@ public sealed class GetBooksQueryHandler(IBookRepository bookRepository)
             items,
             request.Page,
             request.PageSize,
-            totalCount);
+            booksPage.TotalCount);
     }
 }

@@ -38,6 +38,14 @@ public static class BookEndpoints
             .WithSummary("Lista os livros com paginação.")
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+
+        group.MapGet("/{id:guid}/availability", GetAvailabilityAsync)
+            .WithName("GetBookAvailability")
+            .WithSummary("Consulta a disponibilidade atual de um livro.")
+            .WithDescription("A consulta informa a disponibilidade, sem reservar exemplares.")
+            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
     }
 
     private static async Task<Created<CreateBookResponse>> CreateAsync(
@@ -70,6 +78,18 @@ public static class BookEndpoints
         CancellationToken cancellationToken)
     {
         var response = await sender.Send(query, cancellationToken);
+
+        return TypedResults.Ok(response);
+    }
+
+    private static async Task<Ok<BookAvailabilityResponse>> GetAvailabilityAsync(
+        Guid id,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var response = await sender.Send(
+            new GetBookAvailabilityQuery(id),
+            cancellationToken);
 
         return TypedResults.Ok(response);
     }

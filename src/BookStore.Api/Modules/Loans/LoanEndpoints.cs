@@ -34,6 +34,26 @@ public static class LoanEndpoints
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
             .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+
+        group.MapPost("/{id:guid}/return", ReturnAsync)
+            .AddEndpointFilter<RequireActorFilter>()
+            .WithName("ReturnLoan")
+            .WithSummary("Registra a devolução de um empréstimo.")
+            .WithDescription("Exige X-User-Id. Repetir uma devolução confirmada não gera novos efeitos.")
+            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+            .Produces<ProblemDetails>(StatusCodes.Status409Conflict)
+            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+
+        group.MapPost("/{id:guid}/cancel", CancelAsync)
+            .AddEndpointFilter<RequireActorFilter>()
+            .WithName("CancelLoan")
+            .WithSummary("Cancela um empréstimo preservando seu histórico.")
+            .WithDescription("Exige X-User-Id. Repetir um cancelamento confirmado não gera novos efeitos.")
+            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+            .Produces<ProblemDetails>(StatusCodes.Status409Conflict)
+            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
     }
 
     private static async Task<Created<CreateLoanResponse>> CreateAsync(
@@ -61,5 +81,25 @@ public static class LoanEndpoints
         var response = await sender.Send(new GetLoanByIdQuery(id), cancellationToken);
 
         return TypedResults.Ok(response);
+    }
+
+    private static async Task<NoContent> ReturnAsync(
+        Guid id,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        await sender.Send(new ReturnLoanCommand(id), cancellationToken);
+
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<NoContent> CancelAsync(
+        Guid id,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        await sender.Send(new CancelLoanCommand(id), cancellationToken);
+
+        return TypedResults.NoContent();
     }
 }

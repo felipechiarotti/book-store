@@ -9,6 +9,29 @@ namespace BookStore.Infrastructure.Repositories;
 public sealed class LoanRepository(AppDbContext context)
     : BaseRepository<Loan>(context), ILoanRepository
 {
+    public Task<Guid?> GetBookIdAsync(Guid id, CancellationToken cancellationToken)
+        => DbSet
+            .Where(loan => loan.Id == id)
+            .Select(loan => (Guid?)loan.BookId)
+            .SingleOrDefaultAsync(cancellationToken);
+
+    public Task<Loan?> GetByIdWithLockAsync(Guid id, CancellationToken cancellationToken)
+    {
+        if (DbContext.Database.CurrentTransaction is null)
+            throw new InvalidOperationException(
+                "A consulta com bloqueio exige uma transação ativa.");
+
+        return DbSet
+            .FromSql($"""
+                SELECT *
+                FROM "loans"
+                WHERE "Id" = {id}
+                FOR UPDATE
+                """)
+            .AsTracking()
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
     public Task<Loan?> GetByIdempotencyKeyAsync(
         string idempotencyKey,
         CancellationToken cancellationToken)

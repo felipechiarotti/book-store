@@ -8,12 +8,14 @@ Projeto em construção: fundação e cadastro de livro com quantidade e auditor
 A consulta por ID, listagem paginada e a migration de remoção de BookCopy estão presentes. A infraestrutura de usuários
 conta com entidade, mapping, repositório scoped e migration AddUsers gerada, ainda não aplicada nesta etapa.
 O código de POST /users está presente: recebe name e retorna201 com id/name normalizado, sem Location e sem exigir X-User-Id, conforme contrato aprovado.
-Demais operações do catálogo, encerramento de empréstimos, cache e verificação funcional ainda não estão concluídos. O contrato de
+Devolução e cancelamento também estão no código, com204, ClosedAt e auditoria transacional; repetir a mesma ação não gera novo efeito. Demais operações do catálogo, cache e verificação funcional ainda não estão concluídos. O contrato de
 respostas HTTP está aprovado; a centralização dos erros foi adiada pelo arquiteto. Consulte
 o [estado atual](docs/project/status.md) para evidências e limites.
 
 A base de empréstimos conta com Loan/LoanStatus, FKs restritivas, chave de idempotência única e migration AddLoans
 gerada sem acesso ao banco. O código de POST /loans e GET /loans/{id} está presente, com lock de Book, contagem de ativos, auditoria e recuperação idempotente. HTTP, persistência e concorrência real ainda não foram exercitados nesta etapa.
+
+A consulta GET /books/{id}/availability está no código e retorna quantity, activeLoans, availableQuantity e isActive, sem ator/cache/lock pessimista. Livro inativo tem disponibilidade0. É uma fotografia, não uma reserva; POST /loans revalida a capacidade na transação. Ver [contrato e decisões](docs/project/availability.md). Execução HTTP e PostgreSQL permanecem pendentes.
 
 ## Documentação
 
@@ -113,6 +115,8 @@ dotnet test BookStore.sln -c Release
 Os testes de integração usarão PostgreSQL/Redis descartáveis, sem banco de desenvolvimento ou credenciais do .env. Devem
 cobrir especialmente disputa pelo último exemplar, idempotência, atomicidade da auditoria, invalidação de cache e
 contratos HTTP. A matriz completa está no [plano](docs/codex/plans/2026-10-20-simplified-bookstore.md).
+
+Os contratos de leitura usam records nomeados (BookAvailability e PagedResult<T>), separados dos modelos de resposta. Essa escolha melhora clareza e evolução sem alterar o JSON público; ver [decisões de arquitetura](docs/project/design.md).
 
 ## Decisões de consistência
 

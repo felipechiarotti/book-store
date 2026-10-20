@@ -16,6 +16,26 @@ public sealed class Loan : BaseEntity
     public LoanStatus Status { get; private set; } = LoanStatus.Active;
     public string IdempotencyKey { get; private set; } = string.Empty;
 
+    public void Return(DateTimeOffset returnedAt)
+        => Close(LoanStatus.Returned, returnedAt);
+
+    public void Cancel(DateTimeOffset cancelledAt)
+        => Close(LoanStatus.Cancelled, cancelledAt);
+
+    private void Close(LoanStatus status, DateTimeOffset closedAt)
+    {
+        if (Status != LoanStatus.Active)
+            throw new InvalidOperationException("O empréstimo já foi encerrado.");
+
+        if (closedAt < LoanedAt)
+            throw new ArgumentOutOfRangeException(
+                nameof(closedAt),
+                "A data de encerramento não pode ser anterior à data do empréstimo.");
+
+        Status = status;
+        ClosedAt = closedAt.ToUniversalTime();
+    }
+
     public static Loan Create(
         Guid bookId,
         Guid userId,

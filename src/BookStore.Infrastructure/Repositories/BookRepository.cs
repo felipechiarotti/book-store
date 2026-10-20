@@ -1,5 +1,7 @@
-﻿using BookStore.Application.Common.Interfaces;
+using BookStore.Application.Common.Interfaces;
+using BookStore.Application.Common.Models;
 using BookStore.Domain.Entities;
+using BookStore.Domain.Enums;
 using BookStore.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,6 +9,18 @@ namespace BookStore.Infrastructure.Repositories;
 
 public class BookRepository(AppDbContext dbContext) : BaseRepository<Book>(dbContext), IBookRepository
 {
+    public Task<BookAvailability?> GetAvailabilityAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+        => DbSet
+            .Where(book => book.Id == id)
+            .Select(book => new BookAvailability(
+                book.Quantity,
+                DbContext.Loans.Count(loan =>
+                    loan.BookId == book.Id && loan.Status == LoanStatus.Active),
+                book.IsActive))
+            .SingleOrDefaultAsync(cancellationToken);
+
     public async Task<Book?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         return await DbSet.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
@@ -22,7 +36,7 @@ public class BookRepository(AppDbContext dbContext) : BaseRepository<Book>(dbCon
         return await DbSet.AsNoTracking().AnyAsync(b => b.Isbn == isbn, cancellationToken);
     }
 
-    public async Task<(int TotalCount, IReadOnlyList<Book> Items)> GetPaginatedAsync(
+    public async Task<PagedResult<Book>> GetPaginatedAsync(
         int page,
         int pageSize,
         CancellationToken cancellationToken)
@@ -31,7 +45,7 @@ public class BookRepository(AppDbContext dbContext) : BaseRepository<Book>(dbCon
         var offset = ((long)page - 1) * pageSize;
 
         if (offset >= totalCount)
-            return (totalCount, []);
+            return new PagedResult<Book>([], totalCount);
 
         var items = await DbSet
             .AsNoTracking()
@@ -42,7 +56,7 @@ public class BookRepository(AppDbContext dbContext) : BaseRepository<Book>(dbCon
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return (totalCount, items);
+        return new PagedResult<Book>(items, totalCount);
     }
 
     public Task<Book?> GetByIdWithLockAsync(
