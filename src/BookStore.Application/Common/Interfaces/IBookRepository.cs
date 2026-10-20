@@ -12,6 +12,7 @@ public interface IBookRepository : IBaseRepository<Book>
     Task<Book?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<Book?> GetByIdNotTrackedAsync(Guid id, CancellationToken cancellationToken);
     Task<bool> ExistsByIsbnAsync(string isbn, CancellationToken cancellationToken);
+    Task<bool> ExistsByIdAsync(Guid id, CancellationToken cancellationToken);
 
     Task<Book?> GetByIdWithLockAsync(
         Guid id,

@@ -1,4 +1,5 @@
 ﻿using BookStore.Application.Common.Interfaces;
+using BookStore.Application.Common.Models;
 using BookStore.Domain.Entities;
 using BookStore.Domain.Enums;
 using BookStore.Infrastructure.Data;
@@ -55,4 +56,35 @@ public sealed class LoanRepository(AppDbContext context)
             loan => loan.BookId == bookId
                     && loan.Status == LoanStatus.Active,
             cancellationToken);
+
+    public async Task<PagedResult<LoanResponse>> GetHistoryByBookIdAsync(
+        Guid bookId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var query = DbSet.AsNoTracking().Where(loan => loan.BookId == bookId);
+        var totalCount = await query.CountAsync(cancellationToken);
+        var offset = ((long)page - 1) * pageSize;
+
+        if (offset >= totalCount)
+            return new PagedResult<LoanResponse>([], totalCount);
+
+        var items = await query
+            .OrderByDescending(loan => loan.LoanedAt)
+            .ThenByDescending(loan => loan.Id)
+            .Skip((int)offset)
+            .Take(pageSize)
+            .Select(loan => new LoanResponse(
+                loan.Id,
+                loan.BookId,
+                loan.UserId,
+                loan.LoanedAt,
+                loan.DueAt,
+                loan.Status,
+                loan.ClosedAt))
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<LoanResponse>(items, totalCount);
+    }
 }

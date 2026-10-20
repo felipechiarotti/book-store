@@ -62,6 +62,16 @@ public static class BookEndpoints
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 
+        group.MapGet("/{id:guid}/history", GetHistoryAsync)
+            .WithName("GetBookHistory")
+            .WithSummary("Consulta o histórico paginado de empréstimos de um livro.")
+            .WithDescription(
+                "Inclui empréstimos ativos, devolvidos e cancelados, dos mais recentes aos mais antigos. " +
+                "Livros desativados permanecem consultáveis. Página padrão 1, tamanho padrão 20 e máximo 100.")
+            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+
         group.MapGet("/{id:guid}/availability", GetAvailabilityAsync)
             .WithName("GetBookAvailability")
             .WithSummary("Consulta a disponibilidade atual de um livro.")
@@ -124,6 +134,20 @@ public static class BookEndpoints
         CancellationToken cancellationToken)
     {
         var response = await sender.Send(query, cancellationToken);
+
+        return TypedResults.Ok(response);
+    }
+
+    private static async Task<Ok<PageResponse<LoanHistoryResponse>>> GetHistoryAsync(
+        [FromRoute] Guid id,
+        ISender sender,
+        CancellationToken cancellationToken,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var response = await sender.Send(
+            new GetBookHistoryQuery(id, page, pageSize),
+            cancellationToken);
 
         return TypedResults.Ok(response);
     }

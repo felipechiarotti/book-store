@@ -36,6 +36,9 @@ public class BookRepository(AppDbContext dbContext) : BaseRepository<Book>(dbCon
         return await DbSet.AsNoTracking().AnyAsync(b => b.Isbn == isbn, cancellationToken);
     }
 
+    public Task<bool> ExistsByIdAsync(Guid id, CancellationToken cancellationToken)
+        => DbSet.AnyAsync(book => book.Id == id, cancellationToken);
+
     public async Task<PagedResult<Book>> GetPaginatedAsync(
         int page,
         int pageSize,
