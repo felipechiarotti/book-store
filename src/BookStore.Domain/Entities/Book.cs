@@ -11,12 +11,11 @@ public class Book : BaseEntity
     public string Title { get; private set; } = string.Empty;
     public string Isbn { get; private set; } = string.Empty;
     public string Author { get; private set; } = string.Empty;
+    public int Quantity { get; private set; } = 0;
     public bool IsActive { get; private set; } = true;
-    
-    public IEnumerable<BookCopy> Copies = [];
 
 
-    public static Book Create(string title, string isbn, string author)
+    public static Book Create(string title, string isbn, string author, int quantity)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
         ArgumentException.ThrowIfNullOrWhiteSpace(author);
@@ -26,16 +25,18 @@ public class Book : BaseEntity
         {
             Title = title.Trim(),
             Isbn = IsbnRules.Normalize(isbn),
+            Quantity =  quantity,
             Author = author.Trim()
         };
     }
 
-    public void UpdateDetails(string title, string author)
+    public void UpdateDetails(string title, string author, int quantity)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
         ArgumentException.ThrowIfNullOrWhiteSpace(author);
         Title = title.Trim();
         Author = author.Trim();
+        Quantity = quantity;
     }
 
     public void Deactivate()

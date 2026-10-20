@@ -7,7 +7,6 @@ namespace BookStore.Infrastructure.Data;
 public class AppDbContext(DbContextOptions<AppDbContext> options, TimeProvider timeProvider) : DbContext(options)
 {
     public DbSet<Book> Books => Set<Book>();
-    public DbSet<BookCopy> BookCopies => Set<BookCopy>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

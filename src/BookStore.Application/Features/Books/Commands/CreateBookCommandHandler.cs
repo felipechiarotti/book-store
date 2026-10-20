@@ -46,7 +46,6 @@ public sealed class CreateBookCommandValidator
 
 public sealed class CreateBookCommandHandler(
     IBookRepository bookRepository,
-    IBookCopyRepository bookCopyRepository,
     IAuditEventRepository auditEventRepository,
     IUnitOfWork unitOfWork,
     IRequestContext requestContext)
@@ -62,13 +61,12 @@ public sealed class CreateBookCommandHandler(
         var book = Book.Create(
             request.Title,
             request.Isbn,
-            request.Author);
+            request.Author,
+            request.Quantity);
 
         if (await bookRepository.ExistsByIsbnAsync(book.Isbn, cancellationToken))
             throw new ConflictException(
                 "Já existe um livro cadastrado com este ISBN.");
-
-        var bookCopies = CreateCopies(book.Id, request.Quantity);
 
         var details = new BookCreatedAuditDetails(book.Title, book.Isbn, book.Author, book.IsActive, request.Quantity);
 
@@ -81,7 +79,6 @@ public sealed class CreateBookCommandHandler(
             JsonSerializer.Serialize(details));
 
         bookRepository.Add(book);
-        bookCopyRepository.Add(bookCopies);
         auditEventRepository.Add(auditEvent);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -89,17 +86,4 @@ public sealed class CreateBookCommandHandler(
         return new BookCreatedResponse(book.Id);
     }
 
-    private static IReadOnlyList<BookCopy> CreateCopies(Guid bookId, int quantity)
-    {
-        var copies = new List<BookCopy>(quantity);
-
-        for (var index = 0; index < quantity; index++)
-        {
-            var inventoryCode = Guid.CreateVersion7().ToString("N");
-            var copy = BookCopy.Create(bookId, inventoryCode);
-            copies.Add(copy);
-        }
-
-        return copies;
-    }
 }
