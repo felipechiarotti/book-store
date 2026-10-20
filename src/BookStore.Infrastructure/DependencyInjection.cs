@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         
         services.AddScoped<IBookRepository, BookRepository>();
+        services.AddScoped<IAuditEventRepository, AuditEventRepository>();
         return services;
     }
     

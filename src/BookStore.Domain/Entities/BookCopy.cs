@@ -13,7 +13,8 @@ public class BookCopy : BaseEntity
     public static BookCopy Create(Guid bookId, string inventoryCode)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(inventoryCode);
-        ArgumentNullException.ThrowIfNull(bookId);
+        if(bookId == Guid.Empty)
+            throw new ArgumentException("BookId inválido.", nameof(bookId));
         
         return new BookCopy
         {
