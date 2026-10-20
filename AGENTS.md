@@ -25,6 +25,7 @@
 - Planos de execução em docs/codex/plans/ e desenho do sistema em docs/project/design.md. Preservar a preferência por execução acompanhada pelo usuário, sem propor execução autônoma a cada etapa.
 - Dividir trabalho em funcionalidades ou blocos correlacionados. Preparar configurações/dependências necessárias antes do comportamento; implementar testes e auditoria junto da funcionalidade.
 - Preferir a menor solução que cumpra o exercício. Não criar abstrações especulativas, endpoints ou integrações não necessários.
+- Preferência posterior: o autor autorizou o Codex a implementar um bloco aprovado por vez. Antes de cada bloco, informar escopo; depois implementar, revisar internamente e com reviewer independente, verificar e atualizar documentação. Pedir revisão humana e aguardar retorno antes de iniciar o próximo bloco. Perguntar antes de resolver ambiguidades que afetem a implementação; não reabrir decisões já aprovadas.
 - Preferência posterior expressa do usuário: deixar criação/execução dos testes automatizados para a etapa final. Essa decisão substitui a ordem TDD deste plano durante a construção atual, sem eliminar cenários de teste ou o gate final. Continuar revisão e checks de build/configuração pertinentes, registrar verificação parcial e nunca alegar RED/GREEN retroativo.
 
 ## C#, arquitetura e qualidade humana

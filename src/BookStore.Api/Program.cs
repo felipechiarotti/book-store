@@ -1,6 +1,7 @@
 using BookStore.Api.Extensions;
 using BookStore.Api.Middlewares;
 using BookStore.Api.Modules.Books;
+using BookStore.Api.Modules.Users;
 using BookStore.Api.Services;
 using BookStore.Application;
 using BookStore.Application.Common.Interfaces;
@@ -45,4 +46,5 @@ await app.ApplyDatabaseMigrationsAsync();
 
 app.MapHealthChecks("/health");
 app.MapBookEndpoints();
+app.MapUserEndpoints();
 app.Run();

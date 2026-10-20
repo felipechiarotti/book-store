@@ -5,9 +5,15 @@ API de biblioteca para o desafio de empréstimos concorrentes e auditáveis em .
 ## Situação
 
 Projeto em construção: fundação e cadastro de livro com quantidade e auditoria presentes; BookCopy foi removido do código.
-A consulta por ID e a migration de remoção de BookCopy estão presentes. Listagem, demais operações do catálogo, empréstimos, cache e verificação funcional ainda não estão concluídos. O contrato de
+A consulta por ID, listagem paginada e a migration de remoção de BookCopy estão presentes. A infraestrutura de usuários
+conta com entidade, mapping, repositório scoped e migration AddUsers gerada, ainda não aplicada nesta etapa.
+O código de POST /users está presente: recebe name e retorna201 com id/name normalizado, sem Location e sem exigir X-User-Id, conforme contrato aprovado.
+Demais operações do catálogo, empréstimos, cache e verificação funcional ainda não estão concluídos. O contrato de
 respostas HTTP está aprovado; a centralização dos erros foi adiada pelo arquiteto. Consulte
 o [estado atual](docs/project/status.md) para evidências e limites.
+
+A base de empréstimos conta com Loan/LoanStatus, FKs restritivas, chave de idempotência única e migration AddLoans
+gerada sem acesso ao banco. Isso ainda não implementa criação, replay idempotente, locks ou controle de disponibilidade.
 
 ## Documentação
 
