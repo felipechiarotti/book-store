@@ -18,9 +18,8 @@ public class BookRepository(AppDbContext dbContext) : BaseRepository<Book>(dbCon
         return await DbSet.AsNoTracking().AnyAsync(b => b.Isbn == isbn, cancellationToken);
     }
 
-
     public async Task<Book?> GetByIdNotTrackedAsync(
         Guid id,
         CancellationToken cancellationToken)
-        => await DbSet.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        => await DbSet.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 }

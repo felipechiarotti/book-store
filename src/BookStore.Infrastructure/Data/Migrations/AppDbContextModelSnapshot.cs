@@ -89,6 +89,9 @@ namespace BookStore.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset?>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -100,52 +103,6 @@ namespace BookStore.Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("books", (string)null);
-                });
-
-            modelBuilder.Entity("BookStore.Domain.Entities.BookCopy", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BookId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("InventoryCode")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTimeOffset?>("ModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BookId");
-
-                    b.HasIndex("InventoryCode")
-                        .IsUnique();
-
-                    b.ToTable("book_copies", (string)null);
-                });
-
-            modelBuilder.Entity("BookStore.Domain.Entities.BookCopy", b =>
-                {
-                    b.HasOne("BookStore.Domain.Entities.Book", null)
-                        .WithMany("Copies")
-                        .HasForeignKey("BookId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("BookStore.Domain.Entities.Book", b =>
-                {
-                    b.Navigation("Copies");
                 });
 #pragma warning restore 612, 618
         }

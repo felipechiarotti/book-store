@@ -4,8 +4,8 @@ API de biblioteca para o desafio de empréstimos concorrentes e auditáveis em .
 
 ## Situação
 
-Projeto em construção: fundação, modelo inicial do catálogo, migrations e handler de cadastro com exemplares/auditoria
-presentes. Endpoints do catálogo, empréstimos, cache e verificação funcional ainda não estão concluídos. O contrato de
+Projeto em construção: fundação e cadastro de livro com quantidade e auditoria presentes; BookCopy foi removido do código.
+As migrations ainda representam o modelo anterior. Demais operações do catálogo, empréstimos, cache e verificação funcional ainda não estão concluídos. O contrato de
 respostas HTTP está aprovado; a centralização dos erros foi adiada pelo arquiteto. Consulte
 o [estado atual](docs/project/status.md) para evidências e limites.
 
@@ -41,8 +41,8 @@ Não versionar .env, credenciais ou dados sensíveis. Usar .env.example somente 
 ignorado; revisar o índice antes de commits autorizados. O hook de proteção preparado anteriormente está ausente no
 último checkpoint, portanto não presumir que bloqueio adicional está ativo.
 
-Os arquivos Compose e Dockerfile fazem parte da base local. As migrations são aplicadas manualmente antes de iniciar a
-API; subir a aplicação não atualiza o schema. Consulte
+Os arquivos Compose e Dockerfile fazem parte da base local. O código atual chama MigrateAsync no startup da
+API; iniciar o host pode alterar o banco configurado. O schema ainda precisa ser alinhado ao modelo Book.Quantity antes do startup. Consulte
 as [instruções de migrations](docs/project/development.md#migrations-manuais) e o estado atual antes de iniciar serviços
 ou executar migrations contra dados existentes.
 

@@ -68,7 +68,7 @@ public sealed class CreateBookCommandHandler(
             throw new ConflictException(
                 "Já existe um livro cadastrado com este ISBN.");
 
-        var details = new BookCreatedAuditDetails(book.Title, book.Isbn, book.Author, book.IsActive, request.Quantity);
+        var details = new BookCreatedAuditDetails(book.Title, book.Isbn, book.Author, book.IsActive, book.Quantity);
 
         var auditEvent = AuditEvent.Create(
             nameof(Book),

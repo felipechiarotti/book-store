@@ -1,5 +1,4 @@
 ﻿using BookStore.Domain.Entities;
-using BookStore.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookStore.Infrastructure.Data;
@@ -22,16 +21,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TimeProvider t
 
     private void HandleBaseEntity()
     {
-        var softDeletableEntries = ChangeTracker.Entries<ISoftDeletable>()
-            .Where(e => e.State == EntityState.Deleted);
-
-        foreach (var entry in softDeletableEntries)
-        {
-            entry.Property(e => e.IsDeleted).CurrentValue = true;
-            entry.State = EntityState.Modified;
-        }
-        
-        var entries = ChangeTracker
+       var entries = ChangeTracker
             .Entries<BaseEntity>()
             .Where(e => e.State is EntityState.Added or EntityState.Modified)
             .ToList();

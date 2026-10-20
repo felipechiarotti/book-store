@@ -20,12 +20,14 @@ public class Book : BaseEntity
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
         ArgumentException.ThrowIfNullOrWhiteSpace(author);
         ArgumentException.ThrowIfNullOrWhiteSpace(isbn);
+        if (quantity < 0)
+            throw new ArgumentOutOfRangeException(nameof(quantity));
 
         return new Book
         {
             Title = title.Trim(),
             Isbn = IsbnRules.Normalize(isbn),
-            Quantity =  quantity,
+            Quantity = quantity,
             Author = author.Trim()
         };
     }
@@ -34,6 +36,10 @@ public class Book : BaseEntity
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
         ArgumentException.ThrowIfNullOrWhiteSpace(author);
+
+        if (quantity < 0)
+            throw new ArgumentOutOfRangeException(nameof(quantity));
+
         Title = title.Trim();
         Author = author.Trim();
         Quantity = quantity;
