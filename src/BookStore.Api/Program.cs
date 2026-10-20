@@ -1,6 +1,7 @@
 using BookStore.Api.Extensions;
 using BookStore.Api.Middlewares;
 using BookStore.Api.Modules.Books;
+using BookStore.Api.Modules.AuditEvents;
 using BookStore.Api.Modules.Loans;
 using BookStore.Api.Modules.Users;
 using BookStore.Api.Services;
@@ -18,6 +19,11 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 builder.Services.AddApplicationServices();
+builder.Services.AddOptions<PaginationOptions>()
+    .Bind(builder.Configuration.GetSection(PaginationOptions.SectionName))
+    .Validate(options => options.DefaultPageSize is >= 1 and <= 100,
+        "O tamanho padrão da página deve estar entre 1 e 100.")
+    .ValidateOnStart();
 builder.Services.AddOptions<LoanOptions>()
     .Bind(builder.Configuration.GetSection(LoanOptions.SectionName))
     .Validate(options => options.DurationDays > 0, "O prazo de empréstimo deve ser maior que zero.")
@@ -54,4 +60,5 @@ app.MapHealthChecks("/health");
 app.MapBookEndpoints();
 app.MapUserEndpoints();
 app.MapLoanEndpoints();
+app.MapAuditEventEndpoints();
 app.Run();

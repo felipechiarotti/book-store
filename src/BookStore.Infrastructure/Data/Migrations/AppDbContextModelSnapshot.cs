@@ -60,6 +60,8 @@ namespace BookStore.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CorrelationId", "CreatedAt", "Id");
+
                     b.HasIndex("EntityName", "EntityId", "CreatedAt");
 
                     b.ToTable("audit_events", (string)null);

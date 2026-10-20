@@ -1,12 +1,14 @@
 using BookStore.Application.Common.Exceptions;
 using BookStore.Application.Common.Interfaces;
 using BookStore.Application.Common.Models;
+using BookStore.Application.Common.Options;
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Options;
 
 namespace BookStore.Application.Features.Users.Queries;
 
-public sealed record GetUserLoansQuery(Guid Id, int Page = 1, int PageSize = 20)
+public sealed record GetUserLoansQuery(Guid Id, int Page = 1, int? PageSize = null)
     : IRequest<PageResponse<LoanHistoryResponse>>;
 
 public sealed class GetUserLoansQueryValidator : AbstractValidator<GetUserLoansQuery>
@@ -29,20 +31,23 @@ public sealed class GetUserLoansQueryValidator : AbstractValidator<GetUserLoansQ
 
 public sealed class GetUserLoansQueryHandler(
     IUserRepository userRepository,
-    ILoanRepository loanRepository)
+    ILoanRepository loanRepository,
+    IOptions<PaginationOptions> paginationOptions)
     : IRequestHandler<GetUserLoansQuery, PageResponse<LoanHistoryResponse>>
 {
     public async Task<PageResponse<LoanHistoryResponse>> Handle(
         GetUserLoansQuery request,
         CancellationToken cancellationToken)
     {
+        var pageSize = request.PageSize ?? paginationOptions.Value.DefaultPageSize;
+
         if (!await userRepository.ExistsByIdAsync(request.Id, cancellationToken))
             throw new NotFoundException("Usuário não encontrado.");
 
         var history = await loanRepository.GetHistoryByUserIdAsync(
             request.Id,
             request.Page,
-            request.PageSize,
+            pageSize,
             cancellationToken);
 
         var items = history.Items
@@ -59,7 +64,7 @@ public sealed class GetUserLoansQueryHandler(
         return new PageResponse<LoanHistoryResponse>(
             items,
             request.Page,
-            request.PageSize,
+            pageSize,
             history.TotalCount);
     }
 }

@@ -19,6 +19,10 @@ A consulta GET /books/{id}/availability está no código e retorna quantity, act
 
 ## Documentação
 
+O tamanho padrão das consultas paginadas é configurado em `Pagination:DefaultPageSize` (valor inicial20 no appsettings.json), com override nativo `Pagination__DefaultPageSize` no processo da API. Configuração válida1..100; `pageSize` omitido usa esse valor e explícito prevalece após validação. O Compose atual não encaminha essa variável automaticamente. [Contrato e decisão](docs/project/pagination.md).
+
+`GET /audit-events` consulta a auditoria com filtros opcionais e exatos por entityName, entityId e correlationId (AND), paginação1/20 máximo100 e ordem CreatedAt/Id desc. Details retorna como string JSON; Action é enum numérico. Sem X-User-Id. [Contrato e trade-offs](docs/project/audit-events.md). Migration AddAuditCorrelationIndex gerada offline, não aplicada; sem configuração nova. HTTP/PostgreSQL continuam pendentes.
+
 `GET /users/{id}/loans` consulta empréstimos do usuário em todos os estados, inclusive de livros desativados, com o mesmo formato paginado e status textual do histórico por livro. Usuário inexistente404; sem empréstimos200 vazio; sem X-User-Id. Paginação1/20, máximo100, ordem LoanedAt/Id desc. [Contrato e decisões](docs/project/loan-history.md#histórico-por-usuário). Sem nova configuração/migration; HTTP e PostgreSQL permanecem pendentes.
 
 `GET /books/{id}/history` consulta empréstimos ativos, devolvidos e cancelados do livro, inclusive desativado, com paginação e TotalCount. Ordena por LoanedAt/Id decrescentes e retorna status textual; não exige X-User-Id. Livro inexistente404, histórico vazio200. [Contrato e trade-offs](docs/project/loan-history.md). Sem nova configuração/migration; validação HTTP/PostgreSQL ainda pendente.

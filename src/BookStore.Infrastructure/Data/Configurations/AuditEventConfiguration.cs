@@ -31,6 +31,13 @@ public sealed class AuditEventConfiguration
 
         builder.HasIndex(audit => new
         {
+            audit.CorrelationId,
+            audit.CreatedAt,
+            audit.Id
+        });
+
+        builder.HasIndex(audit => new
+        {
             audit.EntityName,
             audit.EntityId,
             audit.CreatedAt

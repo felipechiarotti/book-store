@@ -19,7 +19,7 @@ public static class UserEndpoints
             .WithSummary("Consulta o histórico paginado de empréstimos de um usuário.")
             .WithDescription(
                 "Inclui empréstimos ativos, devolvidos e cancelados, inclusive de livros desativados. " +
-                "Ordenação dos mais recentes aos mais antigos; página padrão 1, tamanho padrão 20 e máximo 100.")
+                "Ordenação dos mais recentes aos mais antigos; página padrão 1, tamanho padrão configurado pela aplicação e máximo 100.")
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
             .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
@@ -36,7 +36,7 @@ public static class UserEndpoints
         ISender sender,
         CancellationToken cancellationToken,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int? pageSize = null)
     {
         var response = await sender.Send(
             new GetUserLoansQuery(id, page, pageSize),

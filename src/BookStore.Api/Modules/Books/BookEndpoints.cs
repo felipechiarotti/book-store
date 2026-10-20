@@ -67,7 +67,7 @@ public static class BookEndpoints
             .WithSummary("Consulta o histórico paginado de empréstimos de um livro.")
             .WithDescription(
                 "Inclui empréstimos ativos, devolvidos e cancelados, dos mais recentes aos mais antigos. " +
-                "Livros desativados permanecem consultáveis. Página padrão 1, tamanho padrão 20 e máximo 100.")
+                "Livros desativados permanecem consultáveis. Página padrão 1, tamanho padrão configurado pela aplicação e máximo 100.")
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
             .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
@@ -143,7 +143,7 @@ public static class BookEndpoints
         ISender sender,
         CancellationToken cancellationToken,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int? pageSize = null)
     {
         var response = await sender.Send(
             new GetBookHistoryQuery(id, page, pageSize),

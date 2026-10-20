@@ -1,12 +1,14 @@
 using BookStore.Application.Common.Exceptions;
 using BookStore.Application.Common.Interfaces;
 using BookStore.Application.Common.Models;
+using BookStore.Application.Common.Options;
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Options;
 
 namespace BookStore.Application.Features.Books.Queries;
 
-public sealed record GetBookHistoryQuery(Guid Id, int Page = 1, int PageSize = 20)
+public sealed record GetBookHistoryQuery(Guid Id, int Page = 1, int? PageSize = null)
     : IRequest<PageResponse<LoanHistoryResponse>>;
 
 public sealed class GetBookHistoryQueryValidator : AbstractValidator<GetBookHistoryQuery>
@@ -29,20 +31,23 @@ public sealed class GetBookHistoryQueryValidator : AbstractValidator<GetBookHist
 
 public sealed class GetBookHistoryQueryHandler(
     IBookRepository bookRepository,
-    ILoanRepository loanRepository)
+    ILoanRepository loanRepository,
+    IOptions<PaginationOptions> paginationOptions)
     : IRequestHandler<GetBookHistoryQuery, PageResponse<LoanHistoryResponse>>
 {
     public async Task<PageResponse<LoanHistoryResponse>> Handle(
         GetBookHistoryQuery request,
         CancellationToken cancellationToken)
     {
+        var pageSize = request.PageSize ?? paginationOptions.Value.DefaultPageSize;
+
         if (!await bookRepository.ExistsByIdAsync(request.Id, cancellationToken))
             throw new NotFoundException("Livro não encontrado.");
 
         var history = await loanRepository.GetHistoryByBookIdAsync(
             request.Id,
             request.Page,
-            request.PageSize,
+            pageSize,
             cancellationToken);
 
         var items = history.Items
@@ -59,7 +64,7 @@ public sealed class GetBookHistoryQueryHandler(
         return new PageResponse<LoanHistoryResponse>(
             items,
             request.Page,
-            request.PageSize,
+            pageSize,
             history.TotalCount);
     }
 }

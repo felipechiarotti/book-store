@@ -1,14 +1,15 @@
 using BookStore.Application.Common.Interfaces;
 using BookStore.Application.Common.Models;
-
+using BookStore.Application.Common.Options;
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Options;
 
 namespace BookStore.Application.Features.Books.Queries;
 
 public sealed record GetBooksQuery(
     int Page = 1,
-    int PageSize = 20)
+    int? PageSize = null)
     : IRequest<PageResponse<BookResponse>>;
 
 public sealed class GetBooksQueryValidator
@@ -26,20 +27,24 @@ public sealed class GetBooksQueryValidator
     }
 }
 
-public sealed class GetBooksQueryHandler(IBookRepository bookRepository)
+public sealed class GetBooksQueryHandler(
+    IBookRepository bookRepository,
+    IOptions<PaginationOptions> paginationOptions)
     : IRequestHandler<GetBooksQuery, PageResponse<BookResponse>>
 {
     public async Task<PageResponse<BookResponse>> Handle(
         GetBooksQuery request,
         CancellationToken cancellationToken)
     {
+        var pageSize = request.PageSize ?? paginationOptions.Value.DefaultPageSize;
+
         var booksPage = await bookRepository.GetPaginatedAsync(
             request.Page,
-            request.PageSize,
+            pageSize,
             cancellationToken);
 
         if (booksPage.TotalCount == 0)
-            return new PageResponse<BookResponse>([], request.Page, request.PageSize, booksPage.TotalCount);
+            return new PageResponse<BookResponse>([], request.Page, pageSize, booksPage.TotalCount);
 
         var items = booksPage.Items
             .Select(book => new BookResponse(
@@ -54,7 +59,7 @@ public sealed class GetBooksQueryHandler(IBookRepository bookRepository)
         return new PageResponse<BookResponse>(
             items,
             request.Page,
-            request.PageSize,
+            pageSize,
             booksPage.TotalCount);
     }
 }
