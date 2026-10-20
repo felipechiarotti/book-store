@@ -1,0 +1,29 @@
+﻿services:
+  bookstore.api:
+    container_name: bookstore_api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      Serilog__MinimumLevel__Default: ${LOG_LEVEL:-Verbose}
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=bookstore_db;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__Redis: "redis:6379"
+    ports:
+      - "15080:8080"
+    depends_on:
+      - postgres
+      - redis
+
+      
+  postgres:
+    container_name: bookstore_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: bookstore_db
+    ports:
+      - "15432:5432"
+
+  redis:
+    container_name: bookstore_cache
+    restart: unless-stopped

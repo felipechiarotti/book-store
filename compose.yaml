@@ -1,0 +1,27 @@
+﻿services:
+  bookstore.api:
+    image: bookstore.api
+    build:
+      context: .
+      dockerfile: src/BookStore.Api/Dockerfile
+    networks:
+      - bookstore_net
+
+  postgres:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bookstore_net
+
+  redis:
+    image: redis:8-alpine
+    networks:
+      - bookstore_net
+
+volumes:
+  postgres_data:
+
+networks:
+  bookstore_net:
+    driver: bridge
