@@ -19,11 +19,14 @@ public sealed class BookCopyConfiguration
         builder.HasIndex(copy => copy.InventoryCode)
             .IsUnique();
 
-        builder.Property(copy => copy.Status)
-            .IsRequired();
+        builder.Property(c => c.IsDeleted)
+            .IsRequired()
+            .HasDefaultValue(false);
 
+        builder.HasQueryFilter(c => !c.IsDeleted);
+        
         builder.HasOne<Book>()
-            .WithMany()
+            .WithMany(book => book.Copies)
             .HasForeignKey(copy => copy.BookId)
             .OnDelete(DeleteBehavior.Restrict);
     }

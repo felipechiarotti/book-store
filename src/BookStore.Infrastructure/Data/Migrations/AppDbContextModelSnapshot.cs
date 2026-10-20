@@ -118,11 +118,11 @@ namespace BookStore.Infrastructure.Data.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset?>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -137,10 +137,15 @@ namespace BookStore.Infrastructure.Data.Migrations
             modelBuilder.Entity("BookStore.Domain.Entities.BookCopy", b =>
                 {
                     b.HasOne("BookStore.Domain.Entities.Book", null)
-                        .WithMany()
+                        .WithMany("Copies")
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("BookStore.Domain.Entities.Book", b =>
+                {
+                    b.Navigation("Copies");
                 });
 #pragma warning restore 612, 618
         }

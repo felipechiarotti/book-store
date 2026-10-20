@@ -1,5 +1,6 @@
 using BookStore.Api.Extensions;
 using BookStore.Api.Middlewares;
+using BookStore.Api.Modules.Books;
 using BookStore.Api.Services;
 using BookStore.Application;
 using BookStore.Application.Common.Interfaces;
@@ -40,6 +41,8 @@ app.UseExceptionHandler();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseStatusCodePages();
 
-app.MapHealthChecks("/health");
+await app.ApplyDatabaseMigrationsAsync();
 
+app.MapHealthChecks("/health");
+app.MapBookEndpoints();
 app.Run();

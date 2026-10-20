@@ -12,8 +12,8 @@
     depends_on:
       - postgres
       - redis
-
-      
+  
+  
   postgres:
     container_name: bookstore_db
     restart: unless-stopped

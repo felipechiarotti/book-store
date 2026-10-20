@@ -13,7 +13,7 @@ public record CreateBookCommand(
     string Title,
     string Isbn,
     string Author,
-    int Quantity) : IRequest<Guid>;
+    int Quantity) : IRequest<BookCreatedResponse>;
 
 public sealed class CreateBookCommandValidator
     : AbstractValidator<CreateBookCommand>
@@ -50,9 +50,9 @@ public sealed class CreateBookCommandHandler(
     IAuditEventRepository auditEventRepository,
     IUnitOfWork unitOfWork,
     IRequestContext requestContext)
-    : IRequestHandler<CreateBookCommand, Guid>
+    : IRequestHandler<CreateBookCommand, BookCreatedResponse>
 {
-    public async Task<Guid> Handle(
+    public async Task<BookCreatedResponse> Handle(
         CreateBookCommand request,
         CancellationToken cancellationToken)
     {
@@ -86,7 +86,7 @@ public sealed class CreateBookCommandHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return book.Id;
+        return new BookCreatedResponse(book.Id);
     }
 
     private static IReadOnlyList<BookCopy> CreateCopies(Guid bookId, int quantity)

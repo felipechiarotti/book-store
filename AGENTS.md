@@ -5,7 +5,7 @@
 - Navegação: [case](docs/case/README.md) para avaliação; [documentação técnica](docs/project/README.md) para desenvolvimento/manutenção; [guia dos agentes](docs/codex/README.md) para processo. Não misturar roteiros de estudo, contratos do sistema e instruções de interação.
 - Ler e seguir [engineering-workflow.md](docs/codex/engineering-workflow.md) antes de executar ou revisar uma etapa.
 - A fonte principal dos requisitos é [docs/desafio-candidato-api-emprestimos-dotnet.md](docs/desafio-candidato-api-emprestimos-dotnet.md). Preservar o enunciado original.
-- Consultar o [desenho aprovado](docs/project/design.md), o [plano por blocos](docs/codex/plans/2026-10-20-bookstore-implementation.md) e os [diagramas](docs/project/architecture.md).
+- Consultar o [desenho aprovado](docs/project/design.md), o [plano por blocos](docs/codex/plans/2026-10-20-simplified-bookstore.md) e os [diagramas](docs/project/architecture.md).
 - Gringotts é referência de organização e conceitos. Não importar suas regras financeiras, seu workflow ou comandos de validação para este projeto.
 - O usuário é o arquiteto principal. Propor soluções com razões e trade-offs; não iniciar funcionalidades ou expandir escopo por conta própria. Aprovações dadas permanecem válidas no respectivo escopo.
 

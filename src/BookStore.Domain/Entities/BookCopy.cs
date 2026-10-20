@@ -1,8 +1,9 @@
 ﻿using BookStore.Domain.Enums;
+using BookStore.Domain.Interfaces;
 
 namespace BookStore.Domain.Entities;
 
-public class BookCopy : BaseEntity
+public class BookCopy : BaseEntity, ISoftDeletable
 {
     private BookCopy()
     {
@@ -10,7 +11,7 @@ public class BookCopy : BaseEntity
 
     public Guid BookId { get; private set; }
     public string InventoryCode { get; private set; } = string.Empty;
-    public BookCopyStatus Status { get; private set; } = BookCopyStatus.AvailableForCirculation;
+    public bool IsDeleted { get; private set; } = false;
 
     public static BookCopy Create(Guid bookId, string inventoryCode)
     {
@@ -23,10 +24,5 @@ public class BookCopy : BaseEntity
             BookId = bookId,
             InventoryCode = inventoryCode
         };
-    }
-
-    public void Withdraw()
-    {
-        Status = BookCopyStatus.Withdrawn;
     }
 }

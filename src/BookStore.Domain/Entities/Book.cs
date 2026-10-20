@@ -12,6 +12,9 @@ public class Book : BaseEntity
     public string Isbn { get; private set; } = string.Empty;
     public string Author { get; private set; } = string.Empty;
     public bool IsActive { get; private set; } = true;
+    
+    public IEnumerable<BookCopy> Copies = [];
+
 
     public static Book Create(string title, string isbn, string author)
     {

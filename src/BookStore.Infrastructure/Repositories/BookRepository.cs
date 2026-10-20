@@ -1,5 +1,7 @@
 ﻿using BookStore.Application.Common.Interfaces;
+using BookStore.Application.Features.Books.Models;
 using BookStore.Domain.Entities;
+using BookStore.Domain.Enums;
 using BookStore.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,4 +18,19 @@ public class BookRepository(AppDbContext dbContext) : BaseRepository<Book>(dbCon
     {
         return await DbSet.AsNoTracking().AnyAsync(b => b.Isbn == isbn, cancellationToken);
     }
+
+    public Task<BookResponse?> GetDetailsByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken)
+        => DbSet
+            .AsNoTracking()
+            .Where(book => book.Id == id)
+            .Select(book => new BookResponse(
+                book.Id,
+                book.Title,
+                book.Isbn,
+                book.Author,
+                book.IsActive,
+                book.Copies.Count()))
+            .SingleOrDefaultAsync(cancellationToken);
 }
