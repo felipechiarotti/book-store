@@ -5,7 +5,7 @@ API de biblioteca para o desafio de empréstimos concorrentes e auditáveis em .
 ## Situação
 
 Projeto em construção: fundação e cadastro de livro com quantidade e auditoria presentes; BookCopy foi removido do código.
-As migrations ainda representam o modelo anterior. Demais operações do catálogo, empréstimos, cache e verificação funcional ainda não estão concluídos. O contrato de
+A consulta por ID e a migration de remoção de BookCopy estão presentes. Listagem, demais operações do catálogo, empréstimos, cache e verificação funcional ainda não estão concluídos. O contrato de
 respostas HTTP está aprovado; a centralização dos erros foi adiada pelo arquiteto. Consulte
 o [estado atual](docs/project/status.md) para evidências e limites.
 
@@ -42,7 +42,7 @@ ignorado; revisar o índice antes de commits autorizados. O hook de proteção p
 último checkpoint, portanto não presumir que bloqueio adicional está ativo.
 
 Os arquivos Compose e Dockerfile fazem parte da base local. O código atual chama MigrateAsync no startup da
-API; iniciar o host pode alterar o banco configurado. O schema ainda precisa ser alinhado ao modelo Book.Quantity antes do startup. Consulte
+API; iniciar o host pode alterar o banco configurado. O autor informou validação da migração para Book.Quantity; a assistência não repetiu sua aplicação ao banco. Consulte
 as [instruções de migrations](docs/project/development.md#migrations-manuais) e o estado atual antes de iniciar serviços
 ou executar migrations contra dados existentes.
 
@@ -139,3 +139,4 @@ Simplificação aprovada, ainda em implementação: Book armazena Quantity e Loa
 - Testes funcionais/concorrentes, readiness/liveness completos, OpenTelemetry e Kubernetes ainda estão pendentes. Antes
   de produção, verificar esses contratos, carga real, segurança, backups/restauração, gestão de segredos e
   dimensionamento de conexões entre réplicas.
+

@@ -7,6 +7,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TimeProvider t
 {
     public DbSet<Book> Books => Set<Book>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
