@@ -19,6 +19,8 @@ A consulta GET /books/{id}/availability está no código e retorna quantity, act
 
 ## Documentação
 
+Health checks simplificados: `/health/live` e `/health` verificam só o processo; `/health/ready` verifica PostgreSQL e Redis com checks prontos. Resposta padrão em texto,200/503, sem X-User-Id. [Escolhas e limites](docs/project/health-checks.md). A API ainda aplica migrations antes de iniciar; falha nessa fase pode impedir todas as rotas. Exposição no Scalar e testes reais permanecem pendentes.
+
 O tamanho padrão das consultas paginadas é configurado em `Pagination:DefaultPageSize` (valor inicial20 no appsettings.json), com override nativo `Pagination__DefaultPageSize` no processo da API. Configuração válida1..100; `pageSize` omitido usa esse valor e explícito prevalece após validação. O Compose repassa PAGINATION_DEFAULT_PAGE_SIZE para Pagination__DefaultPageSize. [Contrato e decisão](docs/project/pagination.md).
 
 `GET /audit-events` consulta a auditoria com filtros opcionais e exatos por entityName, entityId e correlationId (AND), paginação1/20 máximo100 e ordem CreatedAt/Id desc. Details retorna como string JSON; Action é enum numérico. Sem X-User-Id. [Contrato e trade-offs](docs/project/audit-events.md). Migration AddAuditCorrelationIndex gerada offline, não aplicada; sem configuração nova. HTTP/PostgreSQL continuam pendentes.

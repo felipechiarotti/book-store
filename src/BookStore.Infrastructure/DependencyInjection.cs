@@ -23,6 +23,13 @@ public static class DependencyInjection
         services.AddScoped<IAuditEventRepository, AuditEventRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ILoanRepository, LoanRepository>();
+        services.AddHealthChecks()
+            .AddDbContextCheck<AppDbContext>("postgres", tags: ["ready"])
+            .AddRedis(
+                configuration.GetConnectionString("Redis")
+                    ?? throw new InvalidOperationException("Configure ConnectionStrings:Redis."),
+                name: "redis",
+                tags: ["ready"]);
         return services;
     }
 
