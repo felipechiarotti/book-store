@@ -67,8 +67,6 @@ app.UseExceptionHandler();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseStatusCodePages();
 
-await app.ApplyDatabaseMigrationsAsync();
-
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
     Predicate = _ => false

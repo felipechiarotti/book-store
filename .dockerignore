@@ -1,5 +1,7 @@
 ﻿**/.dockerignore
 **/.env
+**/.env.*
+!**/.env.example
 **/.git
 **/.gitignore
 **/.project
@@ -9,6 +11,7 @@
 **/.vscode
 **/.idea
 **/*.*proj.user
+**/*.DotSettings.user
 **/*.dbmdl
 **/*.jfm
 **/azds.yaml
@@ -21,5 +24,8 @@
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
+.agents
+.superpowers
+docs
 LICENSE
 README.md
