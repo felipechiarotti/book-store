@@ -1,5 +1,7 @@
 ﻿using BookStore.Application.Common.Exceptions;
 using FluentValidation;
+using Npgsql;
+using BookStore.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,8 +12,6 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        logger.LogError(exception, "{Message}", exception.Message);
-
         var problemDetails = exception switch
         {
             ValidationException ve => new ProblemDetails

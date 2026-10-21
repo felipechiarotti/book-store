@@ -9,6 +9,7 @@ using BookStore.Domain.Enums;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 namespace BookStore.Application.Features.Loans.Commands;
 
@@ -57,7 +58,8 @@ public sealed class CreateLoanCommandHandler(
     IRequestContext requestContext,
     TimeProvider timeProvider,
     IOptions<LoanOptions> options,
-    LoanMetrics metrics)
+    LoanMetrics metrics,
+    ILogger<CreateLoanCommandHandler> logger)
     : IRequestHandler<CreateLoanCommand, CreateLoanResponse>
 {
     public async Task<CreateLoanResponse> Handle(
@@ -115,7 +117,12 @@ public sealed class CreateLoanCommandHandler(
             throw new NotFoundException("Livro não encontrado.");
 
         if (!book.IsActive)
+        {
+            logger.LogInformation(LoanLogEvents.Rejected,
+                "Loan request rejected for book {BookId}, user {UserId}, actor {ActorId}: {Reason}.",
+                book.Id, request.UserId, requestContext.ActorId, "BookInactive");
             throw new ConflictException("O livro está desativado.");
+        }
 
         var userExists = await userRepository.ExistsByIdAsync(
             request.UserId,
@@ -131,6 +138,11 @@ public sealed class CreateLoanCommandHandler(
         if (activeLoans >= book.Quantity)
         {
             metrics.RecordUnavailableRejection();
+            logger.LogInformation(LoanLogEvents.Unavailable,
+                "Loan rejected for book {BookId}, user {UserId}, actor {ActorId}: {Reason}; capacity {Quantity}, active loans {ActiveLoans}.",
+                book.Id, request.UserId, requestContext.ActorId,
+                "NoAvailableQuantity",
+                book.Quantity, activeLoans);
             throw new ConflictException(
                 "Não há exemplares disponíveis para empréstimo.");
         }
@@ -166,6 +178,9 @@ public sealed class CreateLoanCommandHandler(
         await transaction.CommitAsync(cancellationToken);
 
         metrics.RecordCreated();
+        logger.LogInformation(LoanLogEvents.Created,
+            "Loan {LoanId} created for book {BookId}, user {UserId}, by actor {ActorId}.",
+            loan.Id, loan.BookId, loan.UserId, requestContext.ActorId);
 
         return ToResponse(loan);
     }
@@ -175,10 +190,18 @@ public sealed class CreateLoanCommandHandler(
         CreateLoanCommand request)
     {
         if (loan.BookId != request.BookId || loan.UserId != request.UserId)
+        {
+            logger.LogInformation(LoanLogEvents.Rejected,
+                "Loan request rejected for book {BookId}, user {UserId}, actor {ActorId}: {Reason}.",
+                request.BookId, request.UserId, requestContext.ActorId, "IdempotencyKeyDataMismatch");
             throw new ConflictException(
                 "A chave de idempotência já foi utilizada com outros dados de empréstimo.");
+        }
 
         metrics.RecordIdempotentReplay();
+        logger.LogInformation(LoanLogEvents.Replayed,
+            "Loan {LoanId} replayed for book {BookId}, user {UserId}, by actor {ActorId}.",
+            loan.Id, loan.BookId, loan.UserId, requestContext.ActorId);
 
         return ToResponse(loan);
     }

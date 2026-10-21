@@ -67,7 +67,9 @@ internal sealed class RedisBookCatalogCache(
             {
             }
 
-            logger.LogWarning("Ignoring an incompatible Redis catalog page.");
+            logger.LogWarning(CatalogCacheLogEvents.PayloadRejected,
+                "Ignoring incompatible catalog cache page {Page}, size {PageSize}; reading from PostgreSQL.",
+                page, pageSize);
             return null;
         }, null, cancellationToken);
     }
@@ -107,26 +109,41 @@ internal sealed class RedisBookCatalogCache(
             var database = await connectionProvider.GetDatabaseAsync(timeout.Token);
             var result = await action(database, timeout.Token);
             cancellationToken.ThrowIfCancellationRequested();
+            logger.LogDebug(CatalogCacheLogEvents.OperationCompleted,
+                "Catalog cache operation {Operation} completed.",
+                operation);
             return result;
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            logger.LogWarning("Redis catalog operation {Operation} exceeded its time budget.", operation);
+            logger.LogWarning(CatalogCacheLogEvents.Degraded,
+                "Catalog cache {Operation} failed with {FailureType}. {Effect}",
+                operation, "OperationBudgetExceeded", FailureEffect(operation));
         }
         catch (RedisException exception)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            logger.LogWarning("Redis catalog operation {Operation} failed with {FailureType}.",
-                operation, exception.GetType().Name);
+            logger.LogWarning(CatalogCacheLogEvents.Degraded,
+                "Catalog cache {Operation} failed with {FailureType}. {Effect}",
+                operation, exception.GetType().Name, FailureEffect(operation));
         }
         catch (TimeoutException)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            logger.LogWarning("Redis catalog operation {Operation} timed out.", operation);
+            logger.LogWarning(CatalogCacheLogEvents.Degraded,
+                "Catalog cache {Operation} failed with {FailureType}. {Effect}",
+                operation, "Timeout", FailureEffect(operation));
         }
 
         return fallback;
     }
+
+    private static string FailureEffect(string operation) => operation switch
+    {
+        "Invalidate" => "The database change is committed; cached catalog pages may remain stale until expiration.",
+        "SetPage" => "The database response is preserved without populating this cache page.",
+        _ => "Catalog reads fall back to PostgreSQL."
+    };
 
     private static string? ReadGeneration(RedisValue value)
     {

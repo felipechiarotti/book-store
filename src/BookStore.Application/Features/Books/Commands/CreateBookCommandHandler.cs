@@ -1,3 +1,4 @@
+using BookStore.Application.Features.Books.Diagnostics;
 using System.Text.Json;
 using BookStore.Application.Common.Exceptions;
 using BookStore.Application.Common.Interfaces;
@@ -7,6 +8,7 @@ using BookStore.Domain.Enums;
 using BookStore.Domain.Rules;
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace BookStore.Application.Features.Books.Commands;
 
@@ -52,7 +54,8 @@ public sealed class CreateBookCommandHandler(
     IAuditEventRepository auditEventRepository,
     IUnitOfWork unitOfWork,
     IRequestContext requestContext,
-    IBookCatalogCache catalogCache)
+    IBookCatalogCache catalogCache,
+    ILogger<CreateBookCommandHandler> logger)
     : IRequestHandler<CreateBookCommand, CreateBookResponse>
 {
     public async Task<CreateBookResponse> Handle(
@@ -69,8 +72,13 @@ public sealed class CreateBookCommandHandler(
             request.Quantity);
 
         if (await bookRepository.ExistsByIsbnAsync(book.Isbn, cancellationToken))
+        {
+            logger.LogInformation(BookLogEvents.CreationRejected,
+                "Book creation rejected: {Reason}; actor {ActorId}.",
+                "IsbnAlreadyExists", actorId);
             throw new ConflictException(
                 "Já existe um livro cadastrado com este ISBN.");
+        }
 
         var details = new BookCreatedAuditDetails(book.Title, book.Isbn, book.Author, book.IsActive, book.Quantity);
 
@@ -86,6 +94,9 @@ public sealed class CreateBookCommandHandler(
         auditEventRepository.Add(auditEvent);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        logger.LogInformation(BookLogEvents.Created,
+            "Book {BookId} created with quantity {Quantity} by actor {ActorId}.",
+            book.Id, book.Quantity, actorId);
         await catalogCache.InvalidateAsync(CancellationToken.None);
 
         return new CreateBookResponse(book.Id);

@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using Serilog;
+using Serilog.Events;
+using BookStore.Application.Common.Interfaces;
 
 namespace BookStore.Api.Extensions;
 
@@ -18,7 +20,7 @@ public static class LoggingExtensions
                 "Environment",
                 serviceProvider
                     .GetRequiredService<IHostEnvironment>()
-                    .EnvironmentName));
+                    .EnvironmentName), preserveStaticLogger: true);
 
         return services;
     }
@@ -33,6 +35,9 @@ public static class LoggingExtensions
                 diagnosticContext.Set(
                     "correlationId",
                     context.TraceIdentifier);
+
+                if (context.Items[nameof(IRequestContext.ActorId)] is Guid actorId)
+                    diagnosticContext.Set(nameof(IRequestContext.ActorId), actorId);
 
                 var activity = Activity.Current;
                 if (activity is null)

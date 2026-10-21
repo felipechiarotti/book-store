@@ -1,3 +1,4 @@
+using BookStore.Application.Features.Books.Diagnostics;
 using System.Text.Json;
 using BookStore.Application.Common.Exceptions;
 using BookStore.Application.Common.Interfaces;
@@ -6,6 +7,7 @@ using BookStore.Domain.Entities;
 using BookStore.Domain.Enums;
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace BookStore.Application.Features.Books.Commands;
 
@@ -50,7 +52,8 @@ public sealed class UpdateBookCommandHandler(
     IAuditEventRepository auditEventRepository,
     IUnitOfWork unitOfWork,
     IRequestContext requestContext,
-    IBookCatalogCache catalogCache) : IRequestHandler<UpdateBookCommand>
+    IBookCatalogCache catalogCache,
+    ILogger<UpdateBookCommandHandler> logger) : IRequestHandler<UpdateBookCommand>
 {
     public async Task Handle(UpdateBookCommand request, CancellationToken cancellationToken)
     {
@@ -68,6 +71,9 @@ public sealed class UpdateBookCommandHandler(
             if (before == after)
             {
                 await transaction.CommitAsync(cancellationToken);
+                logger.LogDebug(BookLogEvents.Unchanged,
+                    "Book {BookId} operation {Operation} made no change.",
+                    book.Id, "Update");
                 return;
             }
 
@@ -76,7 +82,13 @@ public sealed class UpdateBookCommandHandler(
                 var activeLoans = await loanRepository.CountActiveByBookIdAsync(book.Id, cancellationToken);
 
                 if (after.Quantity < activeLoans)
+                {
+                    logger.LogInformation(BookLogEvents.QuantityRejected,
+                        "Book {BookId} quantity update rejected: {Reason}; requested {Quantity}, active loans {ActiveLoans}, actor {ActorId}.",
+                        book.Id, "QuantityBelowActiveLoans", after.Quantity,
+                        activeLoans, requestContext.ActorId);
                     throw new ConflictException("A quantidade não pode ser menor que o número de empréstimos ativos.");
+                }
             }
 
             book.UpdateDetails(after.Title, after.Author, after.Quantity);
@@ -93,6 +105,10 @@ public sealed class UpdateBookCommandHandler(
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
+            logger.LogInformation(BookLogEvents.Updated,
+                "Book {BookId} updated by actor {ActorId}; title changed {TitleChanged}, author changed {AuthorChanged}, quantity {PreviousQuantity} to {Quantity}.",
+                book.Id, requestContext.ActorId, before.Title != after.Title, before.Author != after.Author,
+                before.Quantity, after.Quantity);
         }
 
         await catalogCache.InvalidateAsync(CancellationToken.None);

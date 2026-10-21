@@ -1,7 +1,9 @@
+using BookStore.Application.Features.Users.Diagnostics;
 using BookStore.Application.Common.Interfaces;
 using BookStore.Domain.Entities;
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace BookStore.Application.Features.Users.Commands;
 
@@ -26,7 +28,8 @@ public sealed class CreateUserCommandValidator
 
 public sealed class CreateUserCommandHandler(
     IUserRepository userRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    ILogger<CreateUserCommandHandler> logger)
     : IRequestHandler<CreateUserCommand, CreateUserResponse>
 {
     public async Task<CreateUserResponse> Handle(
@@ -37,6 +40,9 @@ public sealed class CreateUserCommandHandler(
 
         userRepository.Add(user);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        logger.LogInformation(UserLogEvents.Created,
+            "User {UserId} created.",
+            user.Id);
 
         return new CreateUserResponse(user.Id, user.Name);
     }

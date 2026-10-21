@@ -1,3 +1,4 @@
+using BookStore.Application.Features.Books.Diagnostics;
 using System.Text.Json;
 using BookStore.Application.Common.Exceptions;
 using BookStore.Application.Common.Interfaces;
@@ -6,6 +7,7 @@ using BookStore.Domain.Entities;
 using BookStore.Domain.Enums;
 using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace BookStore.Application.Features.Books.Commands;
 
@@ -26,7 +28,8 @@ public sealed class DeactivateBookCommandHandler(
     IAuditEventRepository auditEventRepository,
     IUnitOfWork unitOfWork,
     IRequestContext requestContext,
-    IBookCatalogCache catalogCache) : IRequestHandler<DeactivateBookCommand>
+    IBookCatalogCache catalogCache,
+    ILogger<DeactivateBookCommandHandler> logger) : IRequestHandler<DeactivateBookCommand>
 {
     public async Task Handle(DeactivateBookCommand request, CancellationToken cancellationToken)
     {
@@ -38,6 +41,9 @@ public sealed class DeactivateBookCommandHandler(
             if (!book.IsActive)
             {
                 await transaction.CommitAsync(cancellationToken);
+                logger.LogDebug(BookLogEvents.Unchanged,
+                    "Book {BookId} operation {Operation} made no change.",
+                    book.Id, "Deactivate");
                 return;
             }
 
@@ -57,6 +63,9 @@ public sealed class DeactivateBookCommandHandler(
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
+            logger.LogInformation(BookLogEvents.Deactivated,
+                "Book {BookId} deactivated by actor {ActorId}.",
+                book.Id, requestContext.ActorId);
         }
 
         await catalogCache.InvalidateAsync(CancellationToken.None);

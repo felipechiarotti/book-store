@@ -1,9 +1,11 @@
+using BookStore.Application.Features.Books.Diagnostics;
 using BookStore.Application.Common.Interfaces;
 using BookStore.Application.Common.Models;
 using BookStore.Application.Common.Options;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 namespace BookStore.Application.Features.Books.Queries;
 
@@ -30,7 +32,8 @@ public sealed class GetBooksQueryValidator
 public sealed class GetBooksQueryHandler(
     IBookRepository bookRepository,
     IOptions<PaginationOptions> paginationOptions,
-    IBookCatalogCache catalogCache)
+    IBookCatalogCache catalogCache,
+    ILogger<GetBooksQueryHandler> logger)
     : IRequestHandler<GetBooksQuery, PageResponse<BookResponse>>
 {
     public async Task<PageResponse<BookResponse>> Handle(
@@ -45,9 +48,17 @@ public sealed class GetBooksQueryHandler(
             var cachedPage = await catalogCache.GetPageAsync(
                 generation, request.Page, pageSize, cancellationToken);
             if (cachedPage is not null)
+            {
+                logger.LogDebug(BookLogEvents.CatalogCacheRead,
+                    "Catalog page {Page}, size {PageSize}: {CacheResult}.",
+                    request.Page, pageSize, "Hit");
                 return cachedPage;
+            }
         }
 
+        logger.LogDebug(BookLogEvents.CatalogCacheRead,
+            "Catalog page {Page}, size {PageSize}: {CacheResult}.",
+            request.Page, pageSize, generation is null ? "Bypassed" : "Miss");
         var booksPage = await bookRepository.GetPaginatedAsync(
             request.Page,
             pageSize,
