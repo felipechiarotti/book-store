@@ -29,7 +29,8 @@ public sealed class GetBooksQueryValidator
 
 public sealed class GetBooksQueryHandler(
     IBookRepository bookRepository,
-    IOptions<PaginationOptions> paginationOptions)
+    IOptions<PaginationOptions> paginationOptions,
+    IBookCatalogCache catalogCache)
     : IRequestHandler<GetBooksQuery, PageResponse<BookResponse>>
 {
     public async Task<PageResponse<BookResponse>> Handle(
@@ -37,14 +38,20 @@ public sealed class GetBooksQueryHandler(
         CancellationToken cancellationToken)
     {
         var pageSize = request.PageSize ?? paginationOptions.Value.DefaultPageSize;
+        var generation = await catalogCache.GetGenerationAsync(cancellationToken);
+
+        if (generation is not null)
+        {
+            var cachedPage = await catalogCache.GetPageAsync(
+                generation, request.Page, pageSize, cancellationToken);
+            if (cachedPage is not null)
+                return cachedPage;
+        }
 
         var booksPage = await bookRepository.GetPaginatedAsync(
             request.Page,
             pageSize,
             cancellationToken);
-
-        if (booksPage.TotalCount == 0)
-            return new PageResponse<BookResponse>([], request.Page, pageSize, booksPage.TotalCount);
 
         var items = booksPage.Items
             .Select(book => new BookResponse(
@@ -56,10 +63,15 @@ public sealed class GetBooksQueryHandler(
                 book.IsActive))
             .ToArray();
 
-        return new PageResponse<BookResponse>(
+        var response = new PageResponse<BookResponse>(
             items,
             request.Page,
             pageSize,
             booksPage.TotalCount);
+
+        if (generation is not null)
+            await catalogCache.SetPageAsync(generation, response, cancellationToken);
+
+        return response;
     }
 }

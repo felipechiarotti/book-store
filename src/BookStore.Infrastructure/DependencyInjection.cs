@@ -1,5 +1,6 @@
 ﻿using BookStore.Application.Common.Interfaces;
 using BookStore.Infrastructure.Data;
+using BookStore.Infrastructure.Caching;
 using BookStore.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +15,8 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         services.AddPostgres(configuration);
+        services.AddSingleton<RedisConnectionProvider>();
+        services.AddSingleton<IBookCatalogCache, RedisBookCatalogCache>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<IBookRepository, BookRepository>();

@@ -19,6 +19,13 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 builder.Services.AddApplicationServices();
+builder.Services.AddOptions<CatalogCacheOptions>()
+    .Bind(builder.Configuration.GetSection(CatalogCacheOptions.SectionName))
+    .Validate(options => options.TimeToLiveSeconds > 0, "O TTL do catálogo deve ser positivo.")
+    .Validate(options => options.OperationTimeoutMilliseconds > 0, "O timeout do cache deve ser positivo.")
+    .Validate(_ => !string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("Redis")),
+        "Configure ConnectionStrings:Redis.")
+    .ValidateOnStart();
 builder.Services.AddOptions<PaginationOptions>()
     .Bind(builder.Configuration.GetSection(PaginationOptions.SectionName))
     .Validate(options => options.DefaultPageSize is >= 1 and <= 100,

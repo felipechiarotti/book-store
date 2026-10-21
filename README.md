@@ -8,7 +8,7 @@ Projeto em construção: fundação e cadastro de livro com quantidade e auditor
 A consulta por ID, listagem paginada e a migration de remoção de BookCopy estão presentes. A infraestrutura de usuários
 conta com entidade, mapping, repositório scoped e migration AddUsers gerada, ainda não aplicada nesta etapa.
 O código de POST /users está presente: recebe name e retorna201 com id/name normalizado, sem Location e sem exigir X-User-Id, conforme contrato aprovado.
-Devolução e cancelamento também estão no código, com204, ClosedAt e auditoria transacional; repetir a mesma ação não gera novo efeito. Demais operações do catálogo, cache e verificação funcional ainda não estão concluídos. O contrato de
+Devolução e cancelamento também estão no código, com204, ClosedAt e auditoria transacional; repetir a mesma ação não gera novo efeito. Catálogo e cache estão no código; a verificação funcional permanece pendente. O contrato de
 respostas HTTP está aprovado; a centralização dos erros foi adiada pelo arquiteto. Consulte
 o [estado atual](docs/project/status.md) para evidências e limites.
 
@@ -19,7 +19,7 @@ A consulta GET /books/{id}/availability está no código e retorna quantity, act
 
 ## Documentação
 
-O tamanho padrão das consultas paginadas é configurado em `Pagination:DefaultPageSize` (valor inicial20 no appsettings.json), com override nativo `Pagination__DefaultPageSize` no processo da API. Configuração válida1..100; `pageSize` omitido usa esse valor e explícito prevalece após validação. O Compose atual não encaminha essa variável automaticamente. [Contrato e decisão](docs/project/pagination.md).
+O tamanho padrão das consultas paginadas é configurado em `Pagination:DefaultPageSize` (valor inicial20 no appsettings.json), com override nativo `Pagination__DefaultPageSize` no processo da API. Configuração válida1..100; `pageSize` omitido usa esse valor e explícito prevalece após validação. O Compose repassa PAGINATION_DEFAULT_PAGE_SIZE para Pagination__DefaultPageSize. [Contrato e decisão](docs/project/pagination.md).
 
 `GET /audit-events` consulta a auditoria com filtros opcionais e exatos por entityName, entityId e correlationId (AND), paginação1/20 máximo100 e ordem CreatedAt/Id desc. Details retorna como string JSON; Action é enum numérico. Sem X-User-Id. [Contrato e trade-offs](docs/project/audit-events.md). Migration AddAuditCorrelationIndex gerada offline, não aplicada; sem configuração nova. HTTP/PostgreSQL continuam pendentes.
 
@@ -77,7 +77,7 @@ ou executar migrations contra dados existentes.
 | LOAN_DURATION_DAYS | Prazo em dias no Compose; padrão7, positivo; alimenta Loans__DurationDays |
 | Loans__DurationDays | Sobrescrita direta da configuração do prazo no host; padrão7 |
 | ConnectionStrings__Postgres | Conexão usada pela API e ferramentas EF; o Compose monta a conexão para sua rede  |
-| ConnectionStrings__Redis    | Conexão Redis fornecida à API pelo Compose; uso funcional do cache ainda pendente |
+| ConnectionStrings__Redis    | Conexão Redis fornecida à API pelo Compose; cache do catálogo implementado; execução real ainda pendente |
 
 O inventário versionável está em [.env.example](.env.example). Para executar ferramentas no host, configurar a conexão
 PostgreSQL externamente com localhost e a porta publicada 15432. Dentro do Compose, usar postgres:5432. O comando dotnet
@@ -165,3 +165,19 @@ Simplificação aprovada, ainda em implementação: Book armazena Quantity e Loa
   dimensionamento de conexões entre réplicas.
 
 A projeção do histórico reutiliza LoanResponse por escolha do autor; LoanHistoryResponse preserva o status textual do novo endpoint. Ver [decisão e trade-off](docs/project/loan-history.md).
+
+## Cache Redis do catálogo
+
+Usamos StackExchange.Redis diretamente porque a inicialização da geração exige SET NX, ausente no contrato IDistributedCache. RedisConnectionProvider administra a conexão compartilhada; essa escolha acrescenta código de lifecycle a manter. [Alternativas e trade-offs](docs/project/catalog-cache.md#decisão-stackexchangeredis-direto-versus-idistributedcache).
+
+GET /books usa cache-aside: Redis primeiro; miss consulta PostgreSQL e armazena a página com TTL. A chave inclui geração, página e pageSize efetivo. Criação, alteração e desativação efetivas invalidam após commit; no-op e empréstimos não invalidam essa representação sem disponibilidade dinâmica. PostgreSQL continua decidindo capacidade/concorrência/idempotência.
+
+| Compose | Configuração nativa da API | Valor inicial |
+|---|---|---|
+| CATALOG_CACHE_TTL_SECONDS | CatalogCache__TimeToLiveSeconds | 60 segundos |
+| CATALOG_CACHE_OPERATION_TIMEOUT_MS | CatalogCache__OperationTimeoutMilliseconds | 200 milissegundos por método do cache |
+| PAGINATION_DEFAULT_PAGE_SIZE | Pagination__DefaultPageSize | 20 |
+
+Opções do cache positivas e ConnectionStrings__Redis presente são necessárias; o Compose já fornece a conexão por sua configuração. Falha operacional do Redis causa fallback ao banco e warning sem dados sensíveis. Invalidação pós-commit tem timeout próprio, independente do cancelamento da chamada, e falha de Redis não desfaz negócio confirmado. Geração capturada antes da leitura evita que preenchimento atrasado republique dados antigos no namespace novo.
+
+Não há atomicidade PostgreSQL/Redis: janela de invalidação e falhas podem servir dados antigos; TTL limita residência desde publicação, sem garantia estrita a partir do commit. Produção pode exigir invalidação durável/outbox e proteção de stampede. [Fluxo, decisões, limites e evidências](docs/project/catalog-cache.md). Build/Compose e diagnósticos passaram; Redis/PostgreSQL reais, HTTP, expiração e concorrência ainda não foram exercitados. Testes automatizados permanecem para a etapa final.

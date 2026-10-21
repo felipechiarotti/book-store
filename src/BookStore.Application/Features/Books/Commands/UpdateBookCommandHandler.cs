@@ -49,48 +49,52 @@ public sealed class UpdateBookCommandHandler(
     ILoanRepository loanRepository,
     IAuditEventRepository auditEventRepository,
     IUnitOfWork unitOfWork,
-    IRequestContext requestContext) : IRequestHandler<UpdateBookCommand>
+    IRequestContext requestContext,
+    IBookCatalogCache catalogCache) : IRequestHandler<UpdateBookCommand>
 {
     public async Task Handle(UpdateBookCommand request, CancellationToken cancellationToken)
     {
-        await using var transaction = await unitOfWork.BeginTransactionAsync(cancellationToken);
-
-        var book = await bookRepository.GetByIdWithLockAsync(request.Id, cancellationToken)
-            ?? throw new NotFoundException("Livro não encontrado.");
-
-        var before = new BookUpdateSnapshot(book.Title, book.Author, book.Quantity);
-        var after = new BookUpdateSnapshot(
-            request.Title?.Trim() ?? book.Title,
-            request.Author?.Trim() ?? book.Author,
-            request.Quantity ?? book.Quantity);
-
-        if (before == after)
+        await using (var transaction = await unitOfWork.BeginTransactionAsync(cancellationToken))
         {
+            var book = await bookRepository.GetByIdWithLockAsync(request.Id, cancellationToken)
+                ?? throw new NotFoundException("Livro não encontrado.");
+
+            var before = new BookUpdateSnapshot(book.Title, book.Author, book.Quantity);
+            var after = new BookUpdateSnapshot(
+                request.Title?.Trim() ?? book.Title,
+                request.Author?.Trim() ?? book.Author,
+                request.Quantity ?? book.Quantity);
+
+            if (before == after)
+            {
+                await transaction.CommitAsync(cancellationToken);
+                return;
+            }
+
+            if (after.Quantity != before.Quantity)
+            {
+                var activeLoans = await loanRepository.CountActiveByBookIdAsync(book.Id, cancellationToken);
+
+                if (after.Quantity < activeLoans)
+                    throw new ConflictException("A quantidade não pode ser menor que o número de empréstimos ativos.");
+            }
+
+            book.UpdateDetails(after.Title, after.Author, after.Quantity);
+
+            var auditEvent = AuditEvent.Create(
+                nameof(Book),
+                book.Id,
+                AuditAction.Updated,
+                requestContext.ActorId,
+                requestContext.CorrelationId,
+                JsonSerializer.Serialize(new BookUpdatedAuditDetails(before, after)));
+
+            auditEventRepository.Add(auditEvent);
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
-            return;
         }
 
-        if (after.Quantity != before.Quantity)
-        {
-            var activeLoans = await loanRepository.CountActiveByBookIdAsync(book.Id, cancellationToken);
-
-            if (after.Quantity < activeLoans)
-                throw new ConflictException("A quantidade não pode ser menor que o número de empréstimos ativos.");
-        }
-
-        book.UpdateDetails(after.Title, after.Author, after.Quantity);
-
-        var auditEvent = AuditEvent.Create(
-            nameof(Book),
-            book.Id,
-            AuditAction.Updated,
-            requestContext.ActorId,
-            requestContext.CorrelationId,
-            JsonSerializer.Serialize(new BookUpdatedAuditDetails(before, after)));
-
-        auditEventRepository.Add(auditEvent);
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        await catalogCache.InvalidateAsync(CancellationToken.None);
     }
 }

@@ -51,7 +51,8 @@ public sealed class CreateBookCommandHandler(
     IBookRepository bookRepository,
     IAuditEventRepository auditEventRepository,
     IUnitOfWork unitOfWork,
-    IRequestContext requestContext)
+    IRequestContext requestContext,
+    IBookCatalogCache catalogCache)
     : IRequestHandler<CreateBookCommand, CreateBookResponse>
 {
     public async Task<CreateBookResponse> Handle(
@@ -85,6 +86,7 @@ public sealed class CreateBookCommandHandler(
         auditEventRepository.Add(auditEvent);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        await catalogCache.InvalidateAsync(CancellationToken.None);
 
         return new CreateBookResponse(book.Id);
     }
