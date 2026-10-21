@@ -11,6 +11,9 @@
       Pagination__DefaultPageSize: ${PAGINATION_DEFAULT_PAGE_SIZE:-20}
       CatalogCache__TimeToLiveSeconds: ${CATALOG_CACHE_TTL_SECONDS:-60}
       CatalogCache__OperationTimeoutMilliseconds: ${CATALOG_CACHE_OPERATION_TIMEOUT_MS:-200}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-BookStore.Api}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: ${OTEL_EXPORTER_OTLP_PROTOCOL:-http/protobuf}
     ports:
       - "15080:8080"
     depends_on:

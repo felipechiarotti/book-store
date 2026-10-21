@@ -1,4 +1,5 @@
 ﻿using BookStore.Application.Common.Behaviors;
+using BookStore.Application.Features.Loans.Diagnostics;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,6 +19,8 @@ public static class DependencyInjection
         });
 
         services.AddValidatorsFromAssembly(assembly);
+        services.AddMetrics();
+        services.AddSingleton<LoanMetrics>();
 
         return services;
     }

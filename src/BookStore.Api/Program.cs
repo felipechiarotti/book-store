@@ -42,6 +42,7 @@ builder.Services.AddOptions<LoanOptions>()
 
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddStructuredLogging(builder.Configuration);
+builder.Services.AddApplicationTelemetry(builder.Configuration);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IRequestContext, RequestContext>();

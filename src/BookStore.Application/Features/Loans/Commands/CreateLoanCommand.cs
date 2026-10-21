@@ -3,6 +3,7 @@ using BookStore.Application.Common.Exceptions;
 using BookStore.Application.Common.Interfaces;
 using BookStore.Application.Common.Options;
 using BookStore.Application.Common.Models.Auditing;
+using BookStore.Application.Features.Loans.Diagnostics;
 using BookStore.Domain.Entities;
 using BookStore.Domain.Enums;
 using FluentValidation;
@@ -57,7 +58,8 @@ public sealed class CreateLoanCommandHandler(
     IUnitOfWork unitOfWork,
     IRequestContext requestContext,
     TimeProvider timeProvider,
-    IOptions<LoanOptions> options)
+    IOptions<LoanOptions> options,
+    LoanMetrics metrics)
     : IRequestHandler<CreateLoanCommand, CreateLoanResponse>
 {
     public async Task<CreateLoanResponse> Handle(
@@ -129,8 +131,11 @@ public sealed class CreateLoanCommandHandler(
             cancellationToken);
 
         if (activeLoans >= book.Quantity)
+        {
+            metrics.RecordUnavailableRejection();
             throw new ConflictException(
                 "Não há exemplares disponíveis para empréstimo.");
+        }
 
         var loanedAt = timeProvider.GetUtcNow();
         var dueAt = loanedAt.AddDays(options.Value.DurationDays);
@@ -162,10 +167,12 @@ public sealed class CreateLoanCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
+        metrics.RecordCreated();
+
         return ToResponse(loan);
     }
 
-    private static CreateLoanResponse GetIdempotentResponse(
+    private CreateLoanResponse GetIdempotentResponse(
         Loan loan,
         CreateLoanCommand request)
     {
@@ -174,6 +181,8 @@ public sealed class CreateLoanCommandHandler(
             throw new ConflictException(
                 "A chave de idempotência já foi utilizada com outros dados de empréstimo.");
         }
+
+        metrics.RecordIdempotentReplay();
 
         return ToResponse(loan);
     }

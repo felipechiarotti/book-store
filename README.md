@@ -19,6 +19,10 @@ A consulta GET /books/{id}/availability está no código e retorna quantity, act
 
 ## Documentação
 
+[Telemetria de empréstimos](docs/project/telemetry.md) implementada: contadores de criação pós-commit, rejeição por falta de quantidade e replay válido; duração HTTP e traces HTTP/PostgreSQL com SQL parametrizado, sem valores dos parâmetros. Tracing Redis dispensado; Serilog permanece como único pipeline de logs. Revisão independente e diagnósticos isolados realizados; PostgreSQL/receptor OTLP reais e testes formais seguem pendentes.
+
+Configuração opcional de exportação, também repassada pelo Compose: `OTEL_SERVICE_NAME` (padrão `BookStore.Api`), `OTEL_EXPORTER_OTLP_ENDPOINT` (endpoint base; vazio desabilita exportação de rede) e `OTEL_EXPORTER_OTLP_PROTOCOL` (`http/protobuf` por padrão ou `grpc`). Não há Collector/dashboard no Compose; um destino compatível e acessível pela API é necessário para visualizar os sinais. `.env.example` contém apenas exemplos sanitizados. Contadores reiniciam com o processo e podem perder sinais; agregação entre réplicas pertence ao backend, sem substituir a auditoria transacional.
+
 Health checks simplificados: `/health/live` e `/health` verificam só o processo; `/health/ready` verifica PostgreSQL e Redis com checks prontos. Resposta padrão em texto,200/503, sem X-User-Id. [Escolhas e limites](docs/project/health-checks.md). A API ainda aplica migrations antes de iniciar; falha nessa fase pode impedir todas as rotas. Exposição no Scalar e testes reais permanecem pendentes.
 
 O tamanho padrão das consultas paginadas é configurado em `Pagination:DefaultPageSize` (valor inicial20 no appsettings.json), com override nativo `Pagination__DefaultPageSize` no processo da API. Configuração válida1..100; `pageSize` omitido usa esse valor e explícito prevalece após validação. O Compose repassa PAGINATION_DEFAULT_PAGE_SIZE para Pagination__DefaultPageSize. [Contrato e decisão](docs/project/pagination.md).
