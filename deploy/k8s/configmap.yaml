@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bookstore-api-config
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  Serilog__MinimumLevel__Default: "Information"
+  Loans__DurationDays: "7"
+  Pagination__DefaultPageSize: "20"
+  CatalogCache__TimeToLiveSeconds: "60"
+  CatalogCache__OperationTimeoutMilliseconds: "200"
+  OTEL_SERVICE_NAME: "BookStore.Api"
+  OTEL_EXPORTER_OTLP_ENDPOINT: ""
+  OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"

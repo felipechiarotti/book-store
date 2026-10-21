@@ -23,7 +23,7 @@ A consulta GET /books/{id}/availability está no código e retorna quantity, act
 
 Configuração opcional de exportação, também repassada pelo Compose: `OTEL_SERVICE_NAME` (padrão `BookStore.Api`), `OTEL_EXPORTER_OTLP_ENDPOINT` (endpoint base; vazio desabilita exportação de rede) e `OTEL_EXPORTER_OTLP_PROTOCOL` (`http/protobuf` por padrão ou `grpc`). Não há Collector/dashboard no Compose; um destino compatível e acessível pela API é necessário para visualizar os sinais. `.env.example` contém apenas exemplos sanitizados. Contadores reiniciam com o processo e podem perder sinais; agregação entre réplicas pertence ao backend, sem substituir a auditoria transacional.
 
-Health checks simplificados: `/health/live` e `/health` verificam só o processo; `/health/ready` verifica PostgreSQL e Redis com checks prontos. Resposta padrão em texto,200/503, sem X-User-Id. [Escolhas e limites](docs/project/health-checks.md). A API ainda aplica migrations antes de iniciar; falha nessa fase pode impedir todas as rotas. Exposição no Scalar e testes reais permanecem pendentes.
+Health checks simplificados: `/health/live` e `/health` verificam só o processo; `/health/ready` verifica PostgreSQL e Redis com checks prontos. Resposta padrão em texto,200/503, sem X-User-Id. [Escolhas e limites](docs/project/health-checks.md). A API não aplica migrations no startup; prepare o schema antes de iniciá-la. Readiness confirma conectividade, não versão do schema. Exposição no Scalar e testes reais permanecem pendentes.
 
 O tamanho padrão das consultas paginadas é configurado em `Pagination:DefaultPageSize` (valor inicial20 no appsettings.json), com override nativo `Pagination__DefaultPageSize` no processo da API. Configuração válida1..100; `pageSize` omitido usa esse valor e explícito prevalece após validação. O Compose repassa PAGINATION_DEFAULT_PAGE_SIZE para Pagination__DefaultPageSize. [Contrato e decisão](docs/project/pagination.md).
 
@@ -67,10 +67,7 @@ Não versionar .env, credenciais ou dados sensíveis. Usar .env.example somente 
 ignorado; revisar o índice antes de commits autorizados. O hook de proteção preparado anteriormente está ausente no
 último checkpoint, portanto não presumir que bloqueio adicional está ativo.
 
-Os arquivos Compose e Dockerfile fazem parte da base local. O código atual chama MigrateAsync no startup da
-API; iniciar o host pode alterar o banco configurado. O autor informou validação da migração para Book.Quantity; a assistência não repetiu sua aplicação ao banco. Consulte
-as [instruções de migrations](docs/project/development.md#migrations-manuais) e o estado atual antes de iniciar serviços
-ou executar migrations contra dados existentes.
+Dockerfile e Compose preservam API/PostgreSQL/Redis, com publicação multi-stage e runtime não root. Migrations são uma etapa explícita antes de iniciar a API: o startup não cria/atualiza o schema. A imagem foi construída e inspecionada; a sequência completa contra serviços reais continua pendente. Consulte as [instruções de migrations](docs/project/development.md#migrations-manuais) e o estado atual antes de executar alterações no banco.
 
 ### Variáveis de ambiente
 
@@ -94,12 +91,11 @@ ef não carrega .env automaticamente. Não imprimir conexão ou credenciais nos 
 Preparar o .env local com valores próprios a partir do exemplo e iniciar as dependências:
 
 ```powershell
-docker compose up -d postgres redis
+docker compose up -d --wait postgres redis
 dotnet tool restore
 ```
 
-Após o PostgreSQL estar pronto e ConnectionStrings__Postgres estar configurada no processo do host para o banco local
-desejado, aplicar as migrations:
+O manifesto local fixa dotnet-ef10.0.13; dotnet tool restore restaura essa versão sem alterar ferramentas globais. Após as dependências estarem prontas, configure ConnectionStrings__Postgres no processo do host para o banco desejado e ConnectionStrings__Redis para a configuração da aplicação. Use localhost:15432 para PostgreSQL a partir do host; a conexão Redis do host precisa de endereço acessível, pois redis:6379 é DNS interno do Compose. Não exponha valores reais no histórico/README. Então aplique as migrations:
 
 ```powershell
 dotnet ef database update --project src/BookStore.Infrastructure --startup-project src/BookStore.Api
@@ -118,7 +114,7 @@ dotnet run --project src/BookStore.Api
 No host, fornecer também o ambiente e as configurações necessárias por fontes externas; o ambiente do Compose não é
 automaticamente herdado por dotnet run. Estes comandos descrevem o procedimento esperado; a sequência completa e as
 migrations no PostgreSQL ainda precisam de verificação. Não executar contra banco existente sem identificar o destino e
-obter autorização. O depends_on atual não aguarda prontidão das dependências.
+obter autorização. O depends_on da API aguarda os healthchecks PostgreSQL/Redis no startup. Isso não reinicia a API por falhas posteriores nem comprova credenciais/schema. Em múltiplas réplicas, aplicar migrations antes do rollout é responsabilidade do operador; não existe migrador ou Job automático neste bloco.
 
 ## Testes
 
@@ -151,6 +147,26 @@ implementados/verificados.
 Razões e alternativas estão no [desenho técnico](docs/project/design.md); transações e locks estão detalhados
 no [guia transacional](docs/project/transactions.md).
 
+## Kubernetes
+
+Manifests em [deploy/k8s](deploy/k8s): Deployment com 2 réplicas, Service ClusterIP 80 → 8080, ConfigMap e referências obrigatórias ao Secret externo bookstore-api-connections. Requests iniciais 100m/128Mi e limits 500m/256Mi, sem dimensionamento por carga ainda. Probes usam /health/live e /health/ready existentes; o container está configurado para executar como não root.
+
+Antes de aplicar, escolha um namespace existente, forneça o Secret com keys ConnectionStrings__Postgres e ConnectionStrings__Redis, prepare o schema por migrations explícitas e substitua a imagem de exemplo bookstore.api:case por uma referência disponível nos nodes. Não há PostgreSQL/Redis, Job de migration, HPA ou cluster incluído nos manifests. Connection strings reais não pertencem ao YAML, ConfigMap ou Git. [Procedimento completo](docs/project/kubernetes.md#procedimento-para-o-operador).
+
+Os comandos abaixo são instruções para um ambiente autorizado, não foram executados nesta entrega:
+
+```powershell
+kubectl --namespace bookstore apply -f deploy/k8s
+kubectl --namespace bookstore rollout status deployment/bookstore-api
+kubectl --namespace bookstore port-forward service/bookstore-api 15080:80
+```
+
+O namespace bookstore é exemplo e deve existir com o Secret antes de aplicar. Mudanças de ConfigMap/Secret como env exigem recriar/rollout dos Pods. A referência de imagem precisa identificar a versão implantada; construir localmente não garante disponibilidade nos nodes.
+
+**Por que o desenho preserva integridade entre 2 e 11 réplicas:** todas usam o mesmo PostgreSQL; lock de Book serializa decisões de capacidade e a contagem de ativos ocorre na transação; chave de idempotência única e recuperação de corrida evitam duplicação; Loan e auditoria confirmam juntos. Redis compartilhado mantém catálogo/geração de invalidação e não decide disponibilidade. Métricas são por processo, agregadas no backend. Nenhuma dessas garantias depende de lock ou sessão na memória de um Pod.
+
+Isso não comprova throughput ou alta disponibilidade das dependências: pools/conexões, contenção, memória/CPU e réplicas precisam de testes. Não há HPA; scale manual é uma opção operacional, e aplicar novamente o manifesto pode restaurar replicas:2. Schema validado localmente com kubeconform 0.8.0/Kubernetes 1.35.0: 3 recursos válidos, nenhum erro/ignorado; revisão independente sem bloqueios. Nenhum cluster foi provisionado ou acessado, conforme o escopo do exercício.
+
 ## Limitações e evolução para produção
 
 Simplificação aprovada, ainda em implementação: Book armazena Quantity e Loan referencia BookId; exemplares são indistintos, sem BookCopy, InventoryCode ou soft delete por unidade. Disponibilidade é Quantity menos empréstimos ativos para livro ativo. Redução só permite novo total maior ou igual aos empréstimos ativos, preservando todos os Loans. O contrato de empréstimo passa a receber bookId/userId. Ver [plano atual](docs/codex/plans/2026-10-20-simplified-bookstore.md).
@@ -166,7 +182,7 @@ Simplificação aprovada, ainda em implementação: Book armazena Quantity e Loa
   atualização ficar mais rigoroso.
 - A tradução genérica de violação de unicidade é um fallback; não identifica sozinha conflito de ISBN, falha de
   identificador interno ou replay idempotente. Os empréstimos precisarão dessa distinção.
-- Testes funcionais/concorrentes, readiness/liveness completos, OpenTelemetry e Kubernetes ainda estão pendentes. Antes
+- Verificações funcionais/concorrentes, probes e exportação de telemetria contra serviços reais ainda estão pendentes. Os manifests Kubernetes foram validados por schema, sem execução em cluster. Antes
   de produção, verificar esses contratos, carga real, segurança, backups/restauração, gestão de segredos e
   dimensionamento de conexões entre réplicas.
 
