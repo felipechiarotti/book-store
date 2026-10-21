@@ -90,5 +90,4 @@ public sealed class CreateBookCommandHandler(
 
         return new CreateBookResponse(book.Id);
     }
-
 }

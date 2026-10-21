@@ -17,9 +17,9 @@ public interface IBookRepository : IBaseRepository<Book>
     Task<Book?> GetByIdWithLockAsync(
         Guid id,
         CancellationToken cancellationToken);
+
     Task<PagedResult<Book>> GetPaginatedAsync(
         int page,
         int pageSize,
         CancellationToken cancellationToken);
-
 }

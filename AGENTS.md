@@ -33,6 +33,7 @@
 - .NET 10 e C# 14, com recursos modernos compatíveis. Evitar previews e LangVersion=latest; escolher sintaxe pela clareza, expressividade e segurança, não por novidade.
 - Onion nas dependências, Vertical Slice nas funcionalidades, módulos Minimal API e padrões aplicáveis do Gringotts.
 - Nomes expressivos em inglês, métodos coesos, responsabilidades claras, dependências explícitas e organização consistente. Comentários explicam razões e invariantes.
+- Nos arquivos de testes, não adicionar comentários de nenhum tipo, conforme preferência posterior do autor. Expressar Arrange–Act–Assert pela estrutura e pelos nomes; razões e trade-offs ficam na documentação.
 - Preferir records nomeados para resultados de contratos entre camadas (BookAvailability e PagedResult<T>), em vez de tuplas. Manter modelos de leitura separados dos DTOs de resposta; não criar wrappers de escalares ou substituir expressões anônimas exigidas pelas APIs do EF apenas por essa preferência.
 - Entidades com comportamento e factories; records para DTOs/mensagens quando adequados. Domain sem EF/HTTP; Application sem HttpContext.
 - Nullable habilitado, async/await, propagação de CancellationToken, lifetimes corretos e descarte de recursos. Evitar .Result/.Wait, supressões nullable e catch genérico que esconda defeitos.

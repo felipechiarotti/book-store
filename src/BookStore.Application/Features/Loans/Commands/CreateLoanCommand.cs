@@ -25,8 +25,6 @@ public sealed record CreateLoanResponse(
     DateTimeOffset LoanedAt,
     DateTimeOffset DueAt);
 
-
-
 public sealed class CreateLoanCommandValidator
     : AbstractValidator<CreateLoanCommand>
 {
@@ -177,10 +175,8 @@ public sealed class CreateLoanCommandHandler(
         CreateLoanCommand request)
     {
         if (loan.BookId != request.BookId || loan.UserId != request.UserId)
-        {
             throw new ConflictException(
                 "A chave de idempotência já foi utilizada com outros dados de empréstimo.");
-        }
 
         metrics.RecordIdempotentReplay();
 
@@ -188,10 +184,12 @@ public sealed class CreateLoanCommandHandler(
     }
 
     private static CreateLoanResponse ToResponse(Loan loan)
-        => new(
+    {
+        return new CreateLoanResponse(
             loan.Id,
             loan.BookId,
             loan.UserId,
             loan.LoanedAt,
             loan.DueAt);
+    }
 }

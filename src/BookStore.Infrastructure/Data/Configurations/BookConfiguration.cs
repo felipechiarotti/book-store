@@ -21,7 +21,7 @@ public sealed class BookConfiguration : BaseEntityConfiguration<Book>
         builder.Property(book => book.Isbn)
             .IsRequired()
             .HasMaxLength(13);
-        
+
         builder.Property(book => book.Quantity)
             .IsRequired();
 

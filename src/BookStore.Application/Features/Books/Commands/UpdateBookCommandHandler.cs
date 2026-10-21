@@ -57,7 +57,7 @@ public sealed class UpdateBookCommandHandler(
         await using (var transaction = await unitOfWork.BeginTransactionAsync(cancellationToken))
         {
             var book = await bookRepository.GetByIdWithLockAsync(request.Id, cancellationToken)
-                ?? throw new NotFoundException("Livro não encontrado.");
+                       ?? throw new NotFoundException("Livro não encontrado.");
 
             var before = new BookUpdateSnapshot(book.Title, book.Author, book.Quantity);
             var after = new BookUpdateSnapshot(

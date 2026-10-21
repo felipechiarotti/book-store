@@ -1,7 +1,7 @@
 using BookStore.Api.Extensions;
 using BookStore.Api.Middlewares;
-using BookStore.Api.Modules.Books;
 using BookStore.Api.Modules.AuditEvents;
+using BookStore.Api.Modules.Books;
 using BookStore.Api.Modules.Loans;
 using BookStore.Api.Modules.Users;
 using BookStore.Api.Services;
@@ -85,3 +85,10 @@ app.MapUserEndpoints();
 app.MapLoanEndpoints();
 app.MapAuditEventEndpoints();
 app.Run();
+
+namespace BookStore.Api
+{
+    public partial class Program
+    {
+    }
+}

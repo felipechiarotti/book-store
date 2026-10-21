@@ -9,8 +9,10 @@ public sealed class User : BaseEntity
     public string Name { get; private set; } = string.Empty;
 
     public static User Create(string name)
-        => new()
+    {
+        return new User
         {
             Name = name.Trim()
         };
+    }
 }

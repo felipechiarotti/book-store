@@ -11,7 +11,9 @@ public sealed class UserRepository(AppDbContext context)
     public Task<bool> ExistsByIdAsync(
         Guid id,
         CancellationToken cancellationToken)
-        => DbSet.AnyAsync(
+    {
+        return DbSet.AnyAsync(
             user => user.Id == id,
             cancellationToken);
+    }
 }

@@ -17,10 +17,14 @@ public sealed class Loan : BaseEntity
     public string IdempotencyKey { get; private set; } = string.Empty;
 
     public void Return(DateTimeOffset returnedAt)
-        => Close(LoanStatus.Returned, returnedAt);
+    {
+        Close(LoanStatus.Returned, returnedAt);
+    }
 
     public void Cancel(DateTimeOffset cancelledAt)
-        => Close(LoanStatus.Cancelled, cancelledAt);
+    {
+        Close(LoanStatus.Cancelled, cancelledAt);
+    }
 
     private void Close(LoanStatus status, DateTimeOffset closedAt)
     {

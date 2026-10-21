@@ -1,7 +1,6 @@
 ﻿using BookStore.Application.Common.Interfaces;
 using BookStore.Domain.Entities;
 using BookStore.Infrastructure.Data;
-
 using BookStore.Application.Common.Models;
 using Microsoft.EntityFrameworkCore;
 

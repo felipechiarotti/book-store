@@ -33,7 +33,7 @@ public sealed class DeactivateBookCommandHandler(
         await using (var transaction = await unitOfWork.BeginTransactionAsync(cancellationToken))
         {
             var book = await bookRepository.GetByIdWithLockAsync(request.Id, cancellationToken)
-                ?? throw new NotFoundException("Livro não encontrado.");
+                       ?? throw new NotFoundException("Livro não encontrado.");
 
             if (!book.IsActive)
             {

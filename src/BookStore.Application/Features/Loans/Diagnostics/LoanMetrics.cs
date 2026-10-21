@@ -22,9 +22,18 @@ public sealed class LoanMetrics
             "bookstore.loans.idempotent.replays", "{request}", "Repetições idempotentes com dados equivalentes.");
     }
 
-    public void RecordCreated() => _created.Add(1);
+    public void RecordCreated()
+    {
+        _created.Add(1);
+    }
 
-    public void RecordUnavailableRejection() => _unavailableRejections.Add(1);
+    public void RecordUnavailableRejection()
+    {
+        _unavailableRejections.Add(1);
+    }
 
-    public void RecordIdempotentReplay() => _idempotentReplays.Add(1);
+    public void RecordIdempotentReplay()
+    {
+        _idempotentReplays.Add(1);
+    }
 }

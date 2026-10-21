@@ -18,10 +18,14 @@ public sealed class CloseLoanCommandHandler(
     : IRequestHandler<ReturnLoanCommand>, IRequestHandler<CancelLoanCommand>
 {
     public Task Handle(ReturnLoanCommand request, CancellationToken cancellationToken)
-        => CloseAsync(request.Id, LoanStatus.Returned, cancellationToken);
+    {
+        return CloseAsync(request.Id, LoanStatus.Returned, cancellationToken);
+    }
 
     public Task Handle(CancelLoanCommand request, CancellationToken cancellationToken)
-        => CloseAsync(request.Id, LoanStatus.Cancelled, cancellationToken);
+    {
+        return CloseAsync(request.Id, LoanStatus.Cancelled, cancellationToken);
+    }
 
     private async Task CloseAsync(
         Guid id,
@@ -29,16 +33,16 @@ public sealed class CloseLoanCommandHandler(
         CancellationToken cancellationToken)
     {
         var bookId = await loanRepository.GetBookIdAsync(id, cancellationToken)
-            ?? throw new NotFoundException("Empréstimo não encontrado.");
+                     ?? throw new NotFoundException("Empréstimo não encontrado.");
 
         await using var transaction =
             await unitOfWork.BeginTransactionAsync(cancellationToken);
 
         var book = await bookRepository.GetByIdWithLockAsync(bookId, cancellationToken)
-            ?? throw new NotFoundException("Livro não encontrado.");
+                   ?? throw new NotFoundException("Livro não encontrado.");
 
         var loan = await loanRepository.GetByIdWithLockAsync(id, cancellationToken)
-            ?? throw new NotFoundException("Empréstimo não encontrado.");
+                   ?? throw new NotFoundException("Empréstimo não encontrado.");
 
         if (loan.Status == targetStatus)
         {

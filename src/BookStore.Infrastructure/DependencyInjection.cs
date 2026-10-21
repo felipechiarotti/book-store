@@ -27,8 +27,8 @@ public static class DependencyInjection
             .AddDbContextCheck<AppDbContext>("postgres", tags: ["ready"])
             .AddRedis(
                 configuration.GetConnectionString("Redis")
-                    ?? throw new InvalidOperationException("Configure ConnectionStrings:Redis."),
-                name: "redis",
+                ?? throw new InvalidOperationException("Configure ConnectionStrings:Redis."),
+                "redis",
                 tags: ["ready"]);
         return services;
     }

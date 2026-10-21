@@ -26,9 +26,8 @@ public static class TelemetryExtensions
                 !string.IsNullOrEmpty(endpointUri.UserInfo) ||
                 !string.IsNullOrEmpty(endpointUri.Query) ||
                 !string.IsNullOrEmpty(endpointUri.Fragment))
-            {
-                throw new InvalidOperationException("Configure um endpoint OTLP HTTP/HTTPS válido, sem credenciais, query ou fragmento.");
-            }
+                throw new InvalidOperationException(
+                    "Configure um endpoint OTLP HTTP/HTTPS válido, sem credenciais, query ou fragmento.");
 
             protocol = configuration["OTEL_EXPORTER_OTLP_PROTOCOL"]?.Trim() switch
             {
@@ -51,10 +50,7 @@ public static class TelemetryExtensions
                     .AddNpgsql()
                     .AddProcessor(_ => new TracePrivacyProcessor());
 
-                if (exportEnabled)
-                {
-                    tracing.AddOtlpExporter(options => options.Protocol = protocol);
-                }
+                if (exportEnabled) tracing.AddOtlpExporter(options => options.Protocol = protocol);
             })
             .WithMetrics(metrics =>
             {

@@ -1,5 +1,4 @@
 ﻿using BookStore.Domain.Entities;
-
 using BookStore.Application.Common.Models;
 
 namespace BookStore.Application.Common.Interfaces;

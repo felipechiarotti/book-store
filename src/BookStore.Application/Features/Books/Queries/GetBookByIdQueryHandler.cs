@@ -28,10 +28,11 @@ public sealed class GetBookByIdQueryHandler(IBookRepository bookRepository)
         CancellationToken cancellationToken)
     {
         var bookEntity = await bookRepository.GetByIdNotTrackedAsync(
-                   request.Id,
-                   cancellationToken)
-               ?? throw new NotFoundException("Livro não encontrado.");
+                             request.Id,
+                             cancellationToken)
+                         ?? throw new NotFoundException("Livro não encontrado.");
 
-        return new BookResponse(bookEntity.Id, bookEntity.Title, bookEntity.Isbn, bookEntity.Author, bookEntity.Quantity, bookEntity.IsActive);
+        return new BookResponse(bookEntity.Id, bookEntity.Title, bookEntity.Isbn, bookEntity.Author,
+            bookEntity.Quantity, bookEntity.IsActive);
     }
 }

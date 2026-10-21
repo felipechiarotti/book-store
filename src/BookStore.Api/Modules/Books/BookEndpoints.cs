@@ -1,7 +1,6 @@
 using BookStore.Api.Filters;
 using BookStore.Application.Common.Models;
 using BookStore.Application.Features.Books.Commands;
-
 using BookStore.Application.Features.Books.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;

@@ -11,10 +11,12 @@ public sealed class LoanRepository(AppDbContext context)
     : BaseRepository<Loan>(context), ILoanRepository
 {
     public Task<Guid?> GetBookIdAsync(Guid id, CancellationToken cancellationToken)
-        => DbSet
+    {
+        return DbSet
             .Where(loan => loan.Id == id)
             .Select(loan => (Guid?)loan.BookId)
             .SingleOrDefaultAsync(cancellationToken);
+    }
 
     public Task<Loan?> GetByIdWithLockAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -24,11 +26,11 @@ public sealed class LoanRepository(AppDbContext context)
 
         return DbSet
             .FromSql($"""
-                SELECT *
-                FROM "loans"
-                WHERE "Id" = {id}
-                FOR UPDATE
-                """)
+                      SELECT *
+                      FROM "loans"
+                      WHERE "Id" = {id}
+                      FOR UPDATE
+                      """)
             .AsTracking()
             .SingleOrDefaultAsync(cancellationToken);
     }
@@ -36,48 +38,58 @@ public sealed class LoanRepository(AppDbContext context)
     public Task<Loan?> GetByIdempotencyKeyAsync(
         string idempotencyKey,
         CancellationToken cancellationToken)
-        => DbSet
+    {
+        return DbSet
             .AsNoTracking()
             .SingleOrDefaultAsync(
                 loan => loan.IdempotencyKey == idempotencyKey,
                 cancellationToken);
+    }
 
     public Task<Loan?> GetByIdNotTrackedAsync(
         Guid id,
         CancellationToken cancellationToken)
-        => DbSet
+    {
+        return DbSet
             .AsNoTracking()
             .SingleOrDefaultAsync(loan => loan.Id == id, cancellationToken);
+    }
 
     public async Task<int> CountActiveByBookIdAsync(
         Guid bookId,
         CancellationToken cancellationToken)
-        => await DbSet.CountAsync(
+    {
+        return await DbSet.CountAsync(
             loan => loan.BookId == bookId
                     && loan.Status == LoanStatus.Active,
             cancellationToken);
+    }
 
     public Task<PagedResult<LoanResponse>> GetHistoryByBookIdAsync(
         Guid bookId,
         int page,
         int pageSize,
         CancellationToken cancellationToken)
-        => GetHistoryPageAsync(
+    {
+        return GetHistoryPageAsync(
             DbSet.Where(loan => loan.BookId == bookId),
             page,
             pageSize,
             cancellationToken);
+    }
 
     public Task<PagedResult<LoanResponse>> GetHistoryByUserIdAsync(
         Guid userId,
         int page,
         int pageSize,
         CancellationToken cancellationToken)
-        => GetHistoryPageAsync(
+    {
+        return GetHistoryPageAsync(
             DbSet.Where(loan => loan.UserId == userId),
             page,
             pageSize,
             cancellationToken);
+    }
 
     private static async Task<PagedResult<LoanResponse>> GetHistoryPageAsync(
         IQueryable<Loan> query,

@@ -9,7 +9,9 @@ namespace BookStore.Infrastructure.Data;
 public sealed class UnitOfWork(AppDbContext context) : IUnitOfWork
 {
     public void ClearTracking()
-        => context.ChangeTracker.Clear();
+    {
+        context.ChangeTracker.Clear();
+    }
 
     public async Task<int> SaveChangesAsync(
         CancellationToken cancellationToken)
@@ -20,18 +22,18 @@ public sealed class UnitOfWork(AppDbContext context) : IUnitOfWork
         }
         catch (DbUpdateException exception)
             when (exception.InnerException is PostgresException
-            {
-                SqlState: PostgresErrorCodes.UniqueViolation,
-                ConstraintName: "IX_loans_IdempotencyKey"
-            })
+                  {
+                      SqlState: PostgresErrorCodes.UniqueViolation,
+                      ConstraintName: "IX_loans_IdempotencyKey"
+                  })
         {
             throw new IdempotencyKeyConflictException(exception);
         }
         catch (DbUpdateException exception)
             when (exception.InnerException is PostgresException
-            {
-                SqlState: PostgresErrorCodes.UniqueViolation
-            })
+                  {
+                      SqlState: PostgresErrorCodes.UniqueViolation
+                  })
         {
             throw new ConflictException(
                 "A operação conflita com um registro existente.",

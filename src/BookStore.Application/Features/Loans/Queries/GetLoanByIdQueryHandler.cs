@@ -26,9 +26,9 @@ public sealed class GetLoanByIdQueryHandler(ILoanRepository loanRepository)
         CancellationToken cancellationToken)
     {
         var loan = await loanRepository.GetByIdNotTrackedAsync(
-            request.Id,
-            cancellationToken)
-            ?? throw new NotFoundException("Empréstimo não encontrado.");
+                       request.Id,
+                       cancellationToken)
+                   ?? throw new NotFoundException("Empréstimo não encontrado.");
 
         return new LoanResponse(
             loan.Id,

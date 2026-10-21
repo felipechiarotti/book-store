@@ -12,7 +12,8 @@ public class BookRepository(AppDbContext dbContext) : BaseRepository<Book>(dbCon
     public Task<BookAvailability?> GetAvailabilityAsync(
         Guid id,
         CancellationToken cancellationToken)
-        => DbSet
+    {
+        return DbSet
             .Where(book => book.Id == id)
             .Select(book => new BookAvailability(
                 book.Quantity,
@@ -20,6 +21,7 @@ public class BookRepository(AppDbContext dbContext) : BaseRepository<Book>(dbCon
                     loan.BookId == book.Id && loan.Status == LoanStatus.Active),
                 book.IsActive))
             .SingleOrDefaultAsync(cancellationToken);
+    }
 
     public async Task<Book?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -29,7 +31,9 @@ public class BookRepository(AppDbContext dbContext) : BaseRepository<Book>(dbCon
     public async Task<Book?> GetByIdNotTrackedAsync(
         Guid id,
         CancellationToken cancellationToken)
-        => await DbSet.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    {
+        return await DbSet.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
 
     public async Task<bool> ExistsByIsbnAsync(string isbn, CancellationToken cancellationToken)
     {
@@ -37,7 +41,9 @@ public class BookRepository(AppDbContext dbContext) : BaseRepository<Book>(dbCon
     }
 
     public Task<bool> ExistsByIdAsync(Guid id, CancellationToken cancellationToken)
-        => DbSet.AnyAsync(book => book.Id == id, cancellationToken);
+    {
+        return DbSet.AnyAsync(book => book.Id == id, cancellationToken);
+    }
 
     public async Task<PagedResult<Book>> GetPaginatedAsync(
         int page,

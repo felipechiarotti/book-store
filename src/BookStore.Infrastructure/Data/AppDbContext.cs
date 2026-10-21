@@ -23,7 +23,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options, TimeProvider t
 
     private void HandleBaseEntity()
     {
-       var entries = ChangeTracker
+        var entries = ChangeTracker
             .Entries<BaseEntity>()
             .Where(e => e.State is EntityState.Added or EntityState.Modified)
             .ToList();

@@ -16,6 +16,7 @@ internal sealed class RedisBookCatalogCache(
 {
     private const string Prefix = "bookstore:catalog:v1";
     private const string GenerationKey = Prefix + ":generation";
+
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
     {
         RespectRequiredConstructorParameters = true,
@@ -23,7 +24,8 @@ internal sealed class RedisBookCatalogCache(
     };
 
     public Task<string?> GetGenerationAsync(CancellationToken cancellationToken)
-        => ExecuteAsync<string?>("GetGeneration", async (database, token) =>
+    {
+        return ExecuteAsync<string?>("GetGeneration", async (database, token) =>
         {
             var current = await database.StringGetAsync(GenerationKey).WaitAsync(token);
             if (!current.IsNull)
@@ -38,10 +40,12 @@ internal sealed class RedisBookCatalogCache(
 
             return ReadGeneration(await database.StringGetAsync(GenerationKey).WaitAsync(token));
         }, null, cancellationToken);
+    }
 
     public Task<PageResponse<BookResponse>?> GetPageAsync(
         string generation, int page, int pageSize, CancellationToken cancellationToken)
-        => ExecuteAsync<PageResponse<BookResponse>?>("GetPage", async (database, token) =>
+    {
+        return ExecuteAsync<PageResponse<BookResponse>?>("GetPage", async (database, token) =>
         {
             var value = await database.StringGetAsync(PageKey(generation, page, pageSize)).WaitAsync(token);
             if (value.IsNull)
@@ -55,8 +59,8 @@ internal sealed class RedisBookCatalogCache(
                 if (result?.Items is not null && result.Page == page && result.PageSize == pageSize &&
                     result.TotalCount >= 0 && result.Items.Count <= pageSize &&
                     result.Items.All(book => book is not null && book.Id != Guid.Empty &&
-                        book.Quantity >= 0 && book.Title is not null &&
-                        book.Isbn is not null && book.Author is not null))
+                                             book.Quantity >= 0 && book.Title is not null &&
+                                             book.Isbn is not null && book.Author is not null))
                     return result;
             }
             catch (JsonException)
@@ -66,6 +70,7 @@ internal sealed class RedisBookCatalogCache(
             logger.LogWarning("Ignoring an incompatible Redis catalog page.");
             return null;
         }, null, cancellationToken);
+    }
 
     public async Task SetPageAsync(
         string generation, PageResponse<BookResponse> page, CancellationToken cancellationToken)
@@ -73,9 +78,9 @@ internal sealed class RedisBookCatalogCache(
         cancellationToken.ThrowIfCancellationRequested();
         var payload = JsonSerializer.Serialize(page, SerializerOptions);
         await ExecuteAsync("SetPage", async (database, token) =>
-            await database.StringSetAsync(
-                PageKey(generation, page.Page, page.PageSize), payload,
-                TimeSpan.FromSeconds(options.Value.TimeToLiveSeconds)).WaitAsync(token),
+                await database.StringSetAsync(
+                    PageKey(generation, page.Page, page.PageSize), payload,
+                    TimeSpan.FromSeconds(options.Value.TimeToLiveSeconds)).WaitAsync(token),
             false, cancellationToken);
     }
 
@@ -83,7 +88,7 @@ internal sealed class RedisBookCatalogCache(
     {
         var generation = Guid.NewGuid().ToString("N");
         await ExecuteAsync("Invalidate", async (database, token) =>
-            await database.StringSetAsync(GenerationKey, generation).WaitAsync(token),
+                await database.StringSetAsync(GenerationKey, generation).WaitAsync(token),
             false, cancellationToken);
     }
 
@@ -130,5 +135,7 @@ internal sealed class RedisBookCatalogCache(
     }
 
     private static string PageKey(string generation, int page, int pageSize)
-        => string.Create(CultureInfo.InvariantCulture, $"{Prefix}:{generation}:page:{page}:size:{pageSize}");
+    {
+        return string.Create(CultureInfo.InvariantCulture, $"{Prefix}:{generation}:page:{page}:size:{pageSize}");
+    }
 }
